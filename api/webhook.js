@@ -3,6 +3,11 @@ import axios from "axios";
 import { MongoClient, ObjectId } from "mongodb";
 
 const app = express();
+
+app.get("/", (req, res) => {
+  res.send("Bot is alive");
+});
+
 app.use(express.json());
 
 const TOKEN = process.env.BOT_TOKEN;
