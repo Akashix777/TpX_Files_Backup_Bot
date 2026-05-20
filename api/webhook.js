@@ -23,14 +23,20 @@ async function getDB() {
 }
 
 async function sendMessage(chatId, text, keyboard = null) {
+  const payload = {
+    chat_id: chatId,
+    text
+  };
+
+  if (keyboard) {
+    payload.reply_markup = keyboard;
+  }
+
   return axios.post(
     `https://api.telegram.org/bot${TOKEN}/sendMessage`,
-    {
-      chat_id: chatId,
-      text,
-      reply_markup: keyboard
-    }
+    payload
   );
+}
 }
 
 async function sendDocument(chatId, fileId, caption = "") {
