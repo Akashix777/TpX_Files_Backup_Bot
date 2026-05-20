@@ -1,14 +1,9 @@
-import express from "express";
 import axios from "axios";
 import { MongoClient, ObjectId } from "mongodb";
-
-const app = express();
-app.use(express.json());
 
 const TOKEN = process.env.BOT_TOKEN;
 const MONGO = process.env.MONGODB_URI;
 const ADMIN_ID = process.env.ADMIN_ID;
-const PORT = process.env.PORT || 3000;
 
 const client = new MongoClient(MONGO);
 
@@ -37,8 +32,6 @@ async function sendMessage(chatId, text, keyboard = null) {
     payload
   );
 }
-}
-}
 
 async function sendDocument(chatId, fileId, caption = "") {
   return axios.post(
@@ -62,11 +55,7 @@ function fileButtons(files) {
   };
 }
 
-app.get("/", (req, res) => {
-  res.send("Bot Running");
-});
-
-app.post("/", async (req, res) => {
+export default async function handler(req, res) {
   try {
     const body = req.body;
 
@@ -86,12 +75,12 @@ app.post("/", async (req, res) => {
         });
 
         if (!file) {
-          return res.send("ok");
+          return res.status(200).send("ok");
         }
 
         await sendDocument(chatId, file.fileId, file.name);
 
-        return res.send("ok");
+        return res.status(200).send("ok");
       }
     }
 
@@ -128,9 +117,14 @@ app.post("/", async (req, res) => {
 
 Commands:
 
-/list
-/search keyword
-/helpfulnotes`,
+/list - Show all files
+/search keyword - Search files
+/helpfulnotes - Helpful notes
+
+Admin:
+/delete
+/addnote
+/admin`,
           {
             keyboard: [
               [{ text: "/list" }],
@@ -139,6 +133,8 @@ Commands:
             resize_keyboard: true
           }
         );
+
+        return res.status(200).send("ok");
       }
 
       if (text.startsWith("/list")) {
@@ -146,7 +142,7 @@ Commands:
 
         if (!files.length) {
           await sendMessage(chatId, "No files uploaded.");
-          return res.send("ok");
+          return res.status(200).send("ok");
         }
 
         await sendMessage(
@@ -154,17 +150,65 @@ Commands:
           "📁 Uploaded Files",
           fileButtons(files)
         );
+
+        return res.status(200).send("ok");
       }
+
+      if (text.startsWith("/search")) {
+        const keyword = text.replace("/search", "").trim();
+
+        if (!keyword) {
+          await sendMessage(chatId, "Usage:\n/search keyword");
+          return res.status(200).send("ok");
+        }
+
+        const files = await db.files.find({
+          name: {
+            $regex: keyword,
+            $options: "i"
+          }
+        }).toArray();
+
+        if (!files.length) {
+          await sendMessage(chatId, "No matching files found.");
+          return res.status(200).send("ok");
+        }
+
+        await sendMessage(
+          chatId,
+          `🔎 Results for "${keyword}"`,
+          fileButtons(files)
+        );
+
+        return res.status(200).send("ok");
+      }
+
+      if (text.startsWith("/helpfulnotes")) {
+        const notes = await db.notes.find({}).toArray();
+
+        if (!notes.length) {
+          await sendMessage(chatId, "No notes available.");
+          return res.status(200).send("ok");
+        }
+
+        let message = "📌 Helpful Notes\n\n";
+
+        notes.forEach(note => {
+          message += `• ${note.title}\n${note.content}\n\n`;
+        });
+
+        await sendMessage(chatId, message);
+
+        return res.status(200).send("ok");
+      }
+
+      return res.status(200).send("ok");
     }
 
-    res.send("ok");
+    return res.status(200).send("ok");
 
   } catch (err) {
     console.log(err);
-    res.status(500).send("error");
+    return res.status(500).send("error");
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+}
