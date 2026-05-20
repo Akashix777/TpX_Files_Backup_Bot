@@ -38,6 +38,7 @@ async function sendMessage(chatId, text, keyboard = null) {
   );
 }
 }
+}
 
 async function sendDocument(chatId, fileId, caption = "") {
   return axios.post(
