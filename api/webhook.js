@@ -360,6 +360,82 @@ if (command.startsWith("/list")) {
       }
 
 
+
+      if (query.data === "admin_upload") {
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text: "Upload",
+            reply_markup: {
+              inline_keyboard: [
+
+                [
+                  {
+                    text: "Picture",
+                    callback_data: "upload_picture"
+                  },
+                  {
+                    text: "Video",
+                    callback_data: "upload_video"
+                  }
+                ],
+
+                [
+                  {
+                    text: "File / Document",
+                    callback_data: "upload_document"
+                  },
+                  {
+                    text: "Audio",
+                    callback_data: "upload_audio"
+                  }
+                ],
+
+                [
+                  {
+                    text: "GIF",
+                    callback_data: "upload_gif"
+                  },
+                  {
+                    text: "Sticker",
+                    callback_data: "upload_sticker"
+                  }
+                ],
+
+                [
+                  {
+                    text: "Music",
+                    callback_data: "upload_music"
+                  },
+                  {
+                    text: "Other",
+                    callback_data: "upload_other"
+                  }
+                ],
+
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "back_admin_panel"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data: "close_search"
+                  }
+                ]
+
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
 if (query.data === "admin_back") {
 
         return res.sendStatus(200);
@@ -379,6 +455,42 @@ if (query.data === "admin_back") {
                 [
                   {
                     text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    callback_data: "admin_upload"
+                  }
+                ],
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "admin_back"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data: "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+      if (query.data === "back_admin_panel") {
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text: "Admin Panel",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "Upload",
                     callback_data: "admin_upload"
                   }
                 ],
