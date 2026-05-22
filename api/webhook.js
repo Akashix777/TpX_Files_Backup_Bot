@@ -95,7 +95,7 @@ I'm TpX Bot.`;
           ]
         };
 
-        await sendMessage(chatId, caption, keyboard);
+        await sendPhoto(chatId, START_IMAGE, "Test Image");
       }
 
       if (text.startsWith("/list")) {
