@@ -74,8 +74,6 @@ app.post("/webhook", async (req, res) => {
       const msg = body.message;
       const chatId = msg.chat.id;
       const text = msg.text || "";
-      }
-
 
       if (text.startsWith("/start")) {
 
