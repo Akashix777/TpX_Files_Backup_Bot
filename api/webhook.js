@@ -137,13 +137,20 @@ I'm TpX Bot.`;
           return res.sendStatus(200);
         }
 
-        let msgText = `🔎 Results for: ${keyword}\n\n`;
-
-        results.forEach((file, index) => {
-          msgText += `${index + 1}. ${file.file_name}\n`;
+        const buttons = results.map((file) => {
+          return [{
+            text: file.file_name.slice(0, 40),
+            callback_data: `getfile_${file.file_id}`
+          }];
         });
 
-        await sendMessage(chatId, msgText);
+        await sendMessage(
+          chatId,
+          `🔎 Results for: ${keyword}`,
+          {
+            inline_keyboard: buttons
+          }
+        );
       }
 
       if (text.startsWith("/list")) {
