@@ -171,7 +171,7 @@ I'm TpX Bot.`;
 
         await sendMessage(
           chatId,
-          `🔎 Results for: ${keyword}\nPage 1/${totalPages}`,
+          `🔎 ${keyword}`,
           {
             inline_keyboard: buttons
           }
@@ -277,7 +277,7 @@ I'm TpX Bot.`;
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: `🔎 Results for: ${keyword}\nPage ${page}/${totalPages}`,
+            text: `🔎 ${keyword}`,
             reply_markup: {
               inline_keyboard: [
                 ...buttons,
