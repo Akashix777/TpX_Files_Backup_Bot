@@ -235,7 +235,7 @@ I'm TpX Bot.`;
             inline_keyboard: [
               [
                 {
-                  text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                  text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
                   callback_data: "admin_upload"
                 }
               ],
