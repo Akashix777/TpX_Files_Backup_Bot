@@ -115,6 +115,37 @@ I'm TpX Bot.`;
         await sendPhoto(chatId, START_IMAGE, caption, keyboard);
       }
 
+
+      if (text.startsWith("/search")) {
+
+        const keyword = text.split(" ").slice(1).join(" ").trim();
+
+        if (!keyword) {
+          await sendMessage(chatId, "Usage: /search keyword");
+          return res.sendStatus(200);
+        }
+
+        const results = await db.files.find({
+          file_name: {
+            $regex: keyword,
+            $options: "i"
+          }
+        }).limit(10).toArray();
+
+        if (!results.length) {
+          await sendMessage(chatId, "❌ No files found.");
+          return res.sendStatus(200);
+        }
+
+        let msgText = `🔎 Results for: ${keyword}\n\n`;
+
+        results.forEach((file, index) => {
+          msgText += `${index + 1}. ${file.file_name}\n`;
+        });
+
+        await sendMessage(chatId, msgText);
+      }
+
       if (text.startsWith("/list")) {
 
         const files = await db.files.find({}).toArray();
