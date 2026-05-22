@@ -77,23 +77,23 @@ app.post("/webhook", async (req, res) => {
       const text = msg.text || "";
 
       if (text.startsWith("/start")) {
-        await sendMessage(
-          chatId,
-          `📦 Welcome to TpX Files Backup Bot
 
-Commands:
+        const user_name = msg.from.first_name || "User";
 
-/list
-/search keyword
-/helpfulnotes`,
-          {
-            keyboard: [
-              [{ text: "/list" }],
-              [{ text: "/helpfulnotes" }]
-            ],
-            resize_keyboard: true
-          }
-        );
+        const caption = `<b>Konnichiwa, ${user_name}</b> 👋\n\nI\x27m TpX Bot.`;
+
+        const keyboard = {
+          inline_keyboard: [
+            [
+              {
+                text: "🔒 Close",
+                callback_data: "close_start"
+              }
+            ]
+          ]
+        };
+
+        await sendPhoto(chatId, START_IMAGE, caption, keyboard);
       }
 
       if (text.startsWith("/list")) {
