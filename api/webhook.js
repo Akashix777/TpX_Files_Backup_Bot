@@ -75,6 +75,18 @@ app.post("/webhook", async (req, res) => {
       const chatId = msg.chat.id;
       const text = msg.text || "";
 
+      if (msg.photo) {
+        const biggest = msg.photo[msg.photo.length - 1];
+
+        await sendMessage(
+          chatId,
+          `FILE_ID:\n${biggest.file_id}`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
       if (text.startsWith("/start")) {
 
         const user_name = msg.from.first_name || "User";
