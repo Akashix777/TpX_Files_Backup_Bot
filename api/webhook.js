@@ -27,6 +27,24 @@ async function getDB() {
 }
 
 async function sendMessage(chatId, text, keyboard = null) {
+
+async function sendPhoto(chat_id, photo, caption, reply_markup = {}) {
+  try {
+    await axios.post(
+      `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,
+      {
+        chat_id,
+        photo,
+        caption,
+        parse_mode: "HTML",
+        reply_markup
+      }
+    );
+  } catch (err) {
+    console.error("sendPhoto Error:", err.response?.data || err.message);
+  }
+}
+
   const payload = {
     chat_id: chatId,
     text
@@ -98,6 +116,9 @@ Commands:
 });
 
 const PORT = process.env.PORT || 10000;
+
+const START_IMAGE = "AgACAgUAAxkBAAMDag-aFU5GDHO_T-qMizQUe7DwDDYAAg8QaxsaunhUMzilDF26IC4BAAMCAAN3AAM7BA";
+
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
