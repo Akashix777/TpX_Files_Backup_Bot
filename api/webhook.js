@@ -221,6 +221,39 @@ I'm TpX Bot.`;
         );
       }
 
+
+      if (command.startsWith("/admin")) {
+
+        if (String(chatId) !== String(ADMIN_ID)) {
+          return res.sendStatus(200);
+        }
+
+        await sendMessage(
+          chatId,
+          "Admin Panel",
+          {
+            inline_keyboard: [
+              [
+                {
+                  text: "Upload",
+                  callback_data: "admin_upload"
+                }
+              ],
+              [
+                {
+                  text: "⬅ Back",
+                  callback_data: "admin_back"
+                },
+                {
+                  text: "🔒 Close",
+                  callback_data: "close_search"
+                }
+              ]
+            ]
+          }
+        );
+      }
+
 if (command.startsWith("/list")) {
 
         const files = await db.files.find({}).toArray();
@@ -249,6 +282,11 @@ if (command.startsWith("/list")) {
             message_id: query.message.message_id
           }
         );
+      }
+
+      if (query.data === "admin_back") {
+
+        return res.sendStatus(200);
       }
 
       if (query.data === "close_start") {
