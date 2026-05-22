@@ -140,7 +140,7 @@ I'm TpX Bot.`;
         const buttons = results.map((file) => {
           return [{
             text: file.file_name.slice(0, 40),
-            callback_data: `getfile_${file.file_id}`
+            callback_data: `getfile_${file._id}`
           }];
         });
 
