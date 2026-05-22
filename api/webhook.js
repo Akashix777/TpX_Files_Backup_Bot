@@ -153,23 +153,25 @@ I'm TpX Bot.`;
 
         const totalPages = Math.ceil(totalResults / 8);
 
-        if (totalPages > 1) {
-
-          buttons.push([
-            {
-              text: "❮",
-              callback_data: "noop"
-            },
-            {
-              text: `1/${totalPages}`,
-              callback_data: "noop"
-            },
-            {
-              text: "❯",
-              callback_data: `next_${keyword}_2`
-            }
-          ]);
-        }
+        buttons.push([
+          {
+            text: "❮",
+            callback_data: page > 1
+              ? `next_${keyword}_${1 - 1}`
+              : "noop"
+          },
+          {
+            text: `1/${totalPages}`,
+            callback_data: "noop"
+          },
+          {
+            text: "❯",
+            callback_data:
+              totalPages > 1
+                ? `next_${keyword}_2`
+                : "noop"
+          }
+        ]);
 
         buttons.push([
           {
