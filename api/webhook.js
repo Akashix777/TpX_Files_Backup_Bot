@@ -292,7 +292,7 @@ if (command.startsWith("/list")) {
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: "Upload",
+            text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
             reply_markup: {
               inline_keyboard: [
 
@@ -368,50 +368,50 @@ if (command.startsWith("/list")) {
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: "Upload",
+            text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
             reply_markup: {
               inline_keyboard: [
 
                 [
                   {
-                    text: "Picture",
+                    text: "ㅤㅤㅤ Picture ㅤㅤㅤ",
                     callback_data: "upload_picture"
                   },
                   {
-                    text: "Video",
+                    text: "ㅤㅤㅤ Video ㅤㅤㅤ",
                     callback_data: "upload_video"
                   }
                 ],
 
                 [
                   {
-                    text: "File / Document",
+                    text: "ㅤ File / Document ㅤ",
                     callback_data: "upload_document"
                   },
                   {
-                    text: "Audio",
+                    text: "ㅤㅤㅤ Audio ㅤㅤㅤ",
                     callback_data: "upload_audio"
                   }
                 ],
 
                 [
                   {
-                    text: "GIF",
+                    text: "ㅤㅤㅤ GIF ㅤㅤㅤ",
                     callback_data: "upload_gif"
                   },
                   {
-                    text: "Sticker",
+                    text: "ㅤㅤ Sticker ㅤㅤ",
                     callback_data: "upload_sticker"
                   }
                 ],
 
                 [
                   {
-                    text: "Music",
+                    text: "ㅤㅤㅤ Music ㅤㅤㅤ",
                     callback_data: "upload_music"
                   },
                   {
-                    text: "Other",
+                    text: "ㅤㅤㅤ Other ㅤㅤㅤ",
                     callback_data: "upload_other"
                   }
                 ],
@@ -490,7 +490,7 @@ if (query.data === "admin_back") {
               inline_keyboard: [
                 [
                   {
-                    text: "Upload",
+                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
                     callback_data: "admin_upload"
                   }
                 ],
