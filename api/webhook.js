@@ -284,12 +284,124 @@ if (command.startsWith("/list")) {
         );
       }
 
-      if (query.data === "admin_back") {
+      
+      if (query.data === "admin_upload") {
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text: "Upload",
+            reply_markup: {
+              inline_keyboard: [
+
+                [
+                  {
+                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Picture ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    callback_data: "upload_picture"
+                  },
+                  {
+                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Video ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    callback_data: "upload_video"
+                  }
+                ],
+
+                [
+                  {
+                    text: "ㅤㅤㅤㅤ File / Document ㅤㅤㅤㅤ",
+                    callback_data: "upload_document"
+                  },
+                  {
+                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Audio ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    callback_data: "upload_audio"
+                  }
+                ],
+
+                [
+                  {
+                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ GIF ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    callback_data: "upload_gif"
+                  },
+                  {
+                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤ Sticker ㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    callback_data: "upload_sticker"
+                  }
+                ],
+
+                [
+                  {
+                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤ Music ㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    callback_data: "upload_music"
+                  },
+                  {
+                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤ Other ㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    callback_data: "upload_other"
+                  }
+                ],
+
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "back_admin_panel"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data: "close_search"
+                  }
+                ]
+
+              ]
+            }
+          }
+        );
 
         return res.sendStatus(200);
       }
 
-      if (query.data === "close_start") {
+
+if (query.data === "admin_back") {
+
+        return res.sendStatus(200);
+      }
+
+      
+      if (query.data === "back_admin_panel") {
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text: "Admin Panel",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    callback_data: "admin_upload"
+                  }
+                ],
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "admin_back"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data: "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+if (query.data === "close_start") {
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
