@@ -292,7 +292,7 @@ if (command.startsWith("/list")) {
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+            text: "Upload",
             reply_markup: {
               inline_keyboard: [
 
@@ -368,7 +368,7 @@ if (command.startsWith("/list")) {
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+            text: "Upload",
             reply_markup: {
               inline_keyboard: [
 
@@ -490,7 +490,7 @@ if (query.data === "admin_back") {
               inline_keyboard: [
                 [
                   {
-                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    text: "Upload",
                     callback_data: "admin_upload"
                   }
                 ],
