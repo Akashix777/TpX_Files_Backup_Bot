@@ -201,6 +201,73 @@ I'm TpX Bot.`;
         );
       }
 
+
+      if (query.data.startsWith("next_")) {
+
+        const parts = query.data.split("_");
+
+        const keyword = parts[1];
+        const page = Number(parts[2]);
+
+        const skip = (page - 1) * 8;
+
+        const results = await db.files.find({
+          file_name: {
+            $regex: keyword,
+            $options: "i"
+          }
+        }).skip(skip).limit(8).toArray();
+
+        const totalResults = await db.files.countDocuments({
+          file_name: {
+            $regex: keyword,
+            $options: "i"
+          }
+        });
+
+        const totalPages = Math.ceil(totalResults / 8);
+
+        const buttons = results.map((file) => {
+          return [{
+            text: file.file_name.slice(0, 40),
+            callback_data: `getfile_${file._id}`
+          }];
+        });
+
+        const nav = [];
+
+        if (page > 1) {
+          nav.push({
+            text: "⬅ Prev",
+            callback_data: `next_${keyword}_${page - 1}`
+          });
+        }
+
+        if (page < totalPages) {
+          nav.push({
+            text: "➡ Next",
+            callback_data: `next_${keyword}_${page + 1}`
+          });
+        }
+
+        if (nav.length) {
+          buttons.push(nav);
+        }
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text: `🔎 Results for: ${keyword}\nPage ${page}/${totalPages}`,
+            reply_markup: {
+              inline_keyboard: buttons
+            }
+          }
+        );
+      }
+
+
       if (query.data.startsWith("getfile_")) {
 
         const fileDbId = query.data.replace("getfile_", "");
