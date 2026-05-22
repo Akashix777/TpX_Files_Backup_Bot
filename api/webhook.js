@@ -279,13 +279,14 @@ I'm TpX Bot.`;
             message_id: query.message.message_id,
             text: `🔎 Results for: ${keyword}\nPage ${page}/${totalPages}`,
             reply_markup: {
-              inline_keyboard: buttons
-              ],
-              [
-                {
-                  text: "🔒 Close",
-                  callback_data: "close_search"
-                }
+              inline_keyboard: [
+                ...buttons,
+                [
+                  {
+                    text: "🔒 Close",
+                    callback_data: "close_search"
+                  }
+                ]
               ]
             }
           }
