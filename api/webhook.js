@@ -235,7 +235,7 @@ I'm TpX Bot.`;
             inline_keyboard: [
               [
                 {
-                  text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                  text: " Upload ",
                   callback_data: "admin_upload"
                 }
               ],
@@ -298,44 +298,44 @@ if (command.startsWith("/list")) {
 
                 [
                   {
-                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Picture ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    text: " Picture ",
                     callback_data: "upload_picture"
                   },
                   {
-                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Video ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    text: " Video ",
                     callback_data: "upload_video"
                   }
                 ],
 
                 [
                   {
-                    text: "ㅤㅤㅤㅤ File / Document ㅤㅤㅤㅤ",
+                    text: " File / Document ",
                     callback_data: "upload_document"
                   },
                   {
-                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Audio ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    text: " Audio ",
                     callback_data: "upload_audio"
                   }
                 ],
 
                 [
                   {
-                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ GIF ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    text: " GIF ",
                     callback_data: "upload_gif"
                   },
                   {
-                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤ Sticker ㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    text: " Sticker ",
                     callback_data: "upload_sticker"
                   }
                 ],
 
                 [
                   {
-                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤ Music ㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    text: " Music ",
                     callback_data: "upload_music"
                   },
                   {
-                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤ Other ㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    text: " Other ",
                     callback_data: "upload_other"
                   }
                 ],
@@ -454,7 +454,7 @@ if (query.data === "admin_back") {
               inline_keyboard: [
                 [
                   {
-                    text: "ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ Upload ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+                    text: " Upload ",
                     callback_data: "admin_upload"
                   }
                 ],
