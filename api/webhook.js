@@ -144,9 +144,27 @@ I'm TpX Bot.`;
           }];
         });
 
+        const totalResults = await db.files.countDocuments({
+          file_name: {
+            $regex: keyword,
+            $options: "i"
+          }
+        });
+
+        const totalPages = Math.ceil(totalResults / 8);
+
+        if (totalPages > 1) {
+          buttons.push([
+            {
+              text: "➡ Next",
+              callback_data: `next_${keyword}_2`
+            }
+          ]);
+        }
+
         await sendMessage(
           chatId,
-          `🔎 Results for: ${keyword}`,
+          `🔎 Results for: ${keyword}\nPage 1/${totalPages}`,
           {
             inline_keyboard: buttons
           }
