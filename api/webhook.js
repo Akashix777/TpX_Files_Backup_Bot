@@ -154,9 +154,18 @@ I'm TpX Bot.`;
         const totalPages = Math.ceil(totalResults / 8);
 
         if (totalPages > 1) {
+
           buttons.push([
             {
-              text: "➡ Next",
+              text: "❮",
+              callback_data: "noop"
+            },
+            {
+              text: `1/${totalPages}`,
+              callback_data: "noop"
+            },
+            {
+              text: "❯",
               callback_data: `next_${keyword}_2`
             }
           ]);
