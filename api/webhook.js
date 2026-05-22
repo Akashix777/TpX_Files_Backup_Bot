@@ -11,7 +11,7 @@ const MONGO = process.env.MONGODB_URI;
 const ADMIN_ID = process.env.ADMIN_ID;
 const PORT = process.env.PORT || 10000;
 
-const START_IMAGE = "https://picsum.photos/800/400";
+const START_IMAGE = "AgACAgUAAxkBAAMDag-aFU5GDHO_T-qMizQUe7DwDDYAAg8QaxsaunhUMzilDF26IC4BAAMCAAN3AAM7BA";
 
 const client = new MongoClient(MONGO);
 
@@ -95,7 +95,7 @@ I'm TpX Bot.`;
           ]
         };
 
-        await sendPhoto(chatId, START_IMAGE, "Test Image");
+        await sendPhoto(chatId, START_IMAGE, caption, keyboard);
       }
 
       if (text.startsWith("/list")) {
