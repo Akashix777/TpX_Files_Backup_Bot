@@ -74,6 +74,8 @@ app.post("/webhook", async (req, res) => {
       const msg = body.message;
       const chatId = msg.chat.id;
       const text = msg.text || "";
+      const command = text.toLowerCase();
+
 
 
       if (msg.document && String(chatId) === String(ADMIN_ID)) {
@@ -92,7 +94,7 @@ app.post("/webhook", async (req, res) => {
         );
       }
 
-      if (text.startsWith("/start")) {
+      if (command.startsWith("/start")) {
 
         const user_name = msg.from.first_name || "User";
 
@@ -116,7 +118,7 @@ I'm TpX Bot.`;
       }
 
 
-      if (text.startsWith("/search")) {
+      if (command.startsWith("/search")) {
 
         const keyword = text.split(" ").slice(1).join(" ").trim();
 
@@ -187,7 +189,7 @@ I'm TpX Bot.`;
         );
       }
 
-      if (text.startsWith("/list")) {
+      if (command.startsWith("/list")) {
 
         const files = await db.files.find({}).toArray();
 
