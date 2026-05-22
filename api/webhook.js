@@ -190,6 +190,17 @@ I'm TpX Bot.`;
 
       const query = body.callback_query;
 
+      if (query.data === "close_search") {
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id
+          }
+        );
+      }
+
       if (query.data === "close_start") {
 
         await axios.post(
