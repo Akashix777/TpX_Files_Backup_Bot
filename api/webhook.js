@@ -17,6 +17,9 @@ const client = new MongoClient(MONGO);
 
 const uploadMode = {};
 
+const uploadType = {};
+
+
 
 async function getDB() {
   await client.connect();
@@ -361,7 +364,90 @@ if (command.startsWith("/list")) {
 
 
 
-      if (query.data === "admin_back") {
+      
+      const uploadButtons = [
+        "upload_picture",
+        "upload_video",
+        "upload_document",
+        "upload_audio",
+        "upload_gif",
+        "upload_sticker",
+        "upload_music",
+        "upload_other"
+      ];
+
+      if (uploadButtons.includes(query.data)) {
+
+        const type = query.data.replace("upload_", "");
+
+        uploadMode[query.message.chat.id] = true;
+        uploadType[query.message.chat.id] = type;
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text: `${type.toUpperCase()} Upload Mode Active`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "🛑 Stop Upload",
+                    callback_data: "stop_upload_button"
+                  }
+                ],
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "admin_upload"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data: "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+      if (query.data === "stop_upload_button") {
+
+        uploadMode[query.message.chat.id] = false;
+        uploadType[query.message.chat.id] = null;
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text: "Upload Stopped",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "admin_upload"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data: "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+if (query.data === "admin_back") {
 
         return res.sendStatus(200);
       }
