@@ -130,7 +130,7 @@ I'm TpX Bot.`;
             $regex: keyword,
             $options: "i"
           }
-        }).limit(10).toArray();
+        }).limit(8).toArray();
 
         if (!results.length) {
           await sendMessage(chatId, "❌ No files found.");
