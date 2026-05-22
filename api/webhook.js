@@ -156,9 +156,7 @@ I'm TpX Bot.`;
         buttons.push([
           {
             text: "❮",
-            callback_data: page > 1
-              ? `next_${keyword}_${1 - 1}`
-              : "noop"
+            callback_data: "noop"
           },
           {
             text: `1/${totalPages}`,
