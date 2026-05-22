@@ -11,7 +11,7 @@ const MONGO = process.env.MONGODB_URI;
 const ADMIN_ID = process.env.ADMIN_ID;
 const PORT = process.env.PORT || 10000;
 
-const START_IMAGE = "https://picsum.photos/800/400";
+const START_IMAGE = "AgACAgUAAxkBAAIBgmoQIZ8IpYDivrIbUrsvAAEZznqwKgACqxBrG470gFSDEcSLOUZEVAEAAwIAA3cAAzsE";
 
 const client = new MongoClient(MONGO);
 
@@ -75,15 +75,6 @@ app.post("/webhook", async (req, res) => {
       const chatId = msg.chat.id;
       const text = msg.text || "";
 
-      if (msg.photo) {
-        const biggest = msg.photo[msg.photo.length - 1];
-
-        await sendMessage(
-          chatId,
-          `FILE_ID:\n${biggest.file_id}`
-        );
-
-        return res.sendStatus(200);
       }
 
 
