@@ -15,6 +15,9 @@ const START_IMAGE = "AgACAgUAAxkBAAIBgmoQIZ8IpYDivrIbUrsvAAEZznqwKgACqxBrG470gFS
 
 const client = new MongoClient(MONGO);
 
+const uploadMode = {};
+
+
 async function getDB() {
   await client.connect();
 
@@ -78,7 +81,7 @@ app.post("/webhook", async (req, res) => {
 
 
 
-      if (msg.document && String(chatId) === String(ADMIN_ID)) {
+      if (uploadMode[chatId] && msg.document && String(chatId) === String(ADMIN_ID)) {
 
         const doc = msg.document;
 
@@ -189,7 +192,36 @@ I'm TpX Bot.`;
         );
       }
 
-      if (command.startsWith("/list")) {
+      
+      if (command.startsWith("/upload")) {
+
+        if (String(chatId) !== String(ADMIN_ID)) {
+          return res.sendStatus(200);
+        }
+
+        uploadMode[chatId] = true;
+
+        await sendMessage(
+          chatId,
+          "Upload mode enabled."
+        );
+      }
+
+      if (command.startsWith("/stopupload")) {
+
+        if (String(chatId) !== String(ADMIN_ID)) {
+          return res.sendStatus(200);
+        }
+
+        uploadMode[chatId] = false;
+
+        await sendMessage(
+          chatId,
+          "Upload mode disabled."
+        );
+      }
+
+if (command.startsWith("/list")) {
 
         const files = await db.files.find({}).toArray();
 
