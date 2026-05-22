@@ -182,6 +182,28 @@ I'm TpX Bot.`;
           }
         );
       }
+
+      if (query.data.startsWith("getfile_")) {
+
+        const fileDbId = query.data.replace("getfile_", "");
+
+        const file = await db.files.findOne({
+          _id: new ObjectId(fileDbId)
+        });
+
+        if (!file) {
+          return res.sendStatus(200);
+        }
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/sendDocument`,
+          {
+            chat_id: query.message.chat.id,
+            document: file.file_id,
+            caption: file.file_name
+          }
+        );
+      }
     }
 
     res.sendStatus(200);
