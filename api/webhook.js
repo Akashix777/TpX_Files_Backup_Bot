@@ -162,6 +162,13 @@ I'm TpX Bot.`;
           ]);
         }
 
+        buttons.push([
+          {
+            text: "🔒 Close",
+            callback_data: "close_search"
+          }
+        ]);
+
         await sendMessage(
           chatId,
           `🔎 Results for: ${keyword}\nPage 1/${totalPages}`,
@@ -273,6 +280,13 @@ I'm TpX Bot.`;
             text: `🔎 Results for: ${keyword}\nPage ${page}/${totalPages}`,
             reply_markup: {
               inline_keyboard: buttons
+              ],
+              [
+                {
+                  text: "🔒 Close",
+                  callback_data: "close_search"
+                }
+              ]
             }
           }
         );
