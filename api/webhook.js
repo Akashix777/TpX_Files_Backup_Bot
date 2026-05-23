@@ -95,7 +95,8 @@ app.post("/webhook", async (req, res) => {
           file = {
             file_id: msg.document.file_id,
             file_name:
-              msg.document.file_name || "Unnamed File"
+              msg.document.file_name || "Unnamed File",
+            media_type: "document"
           };
         }
 
@@ -106,7 +107,8 @@ app.post("/webhook", async (req, res) => {
             file_name:
               msg.audio.file_name ||
               msg.audio.title ||
-              "Unnamed Music"
+              "Unnamed Music",
+            media_type: "audio"
           };
         }
 
@@ -115,7 +117,8 @@ app.post("/webhook", async (req, res) => {
           file = {
             file_id: msg.video.file_id,
             file_name:
-              msg.video.file_name || "Unnamed Video"
+              msg.video.file_name || "Unnamed Video",
+            media_type: "video"
           };
         }
 
@@ -126,7 +129,8 @@ app.post("/webhook", async (req, res) => {
 
           file = {
             file_id: photo.file_id,
-            file_name: "Photo"
+            file_name: "Photo",
+            media_type: "photo"
           };
         }
 
@@ -135,7 +139,8 @@ app.post("/webhook", async (req, res) => {
           file = {
             file_id: msg.animation.file_id,
             file_name:
-              msg.animation.file_name || "GIF"
+              msg.animation.file_name || "GIF",
+            media_type: "animation"
           };
         }
 
@@ -143,7 +148,8 @@ app.post("/webhook", async (req, res) => {
 
           file = {
             file_id: msg.sticker.file_id,
-            file_name: "Sticker"
+            file_name: "Sticker",
+            media_type: "sticker"
           };
         }
 
@@ -151,7 +157,8 @@ app.post("/webhook", async (req, res) => {
 
           file = {
             file_id: msg.voice.file_id,
-            file_name: "Voice Message"
+            file_name: "Voice Message",
+            media_type: "voice"
           };
         }
 
@@ -685,13 +692,50 @@ if (query.data === "admin_back") {
           return res.sendStatus(200);
         }
 
+        let method = "sendDocument";
+        let payload = {
+          chat_id: query.message.chat.id,
+          caption: file.file_name
+        };
+
+        if (file.media_type === "photo") {
+          method = "sendPhoto";
+          payload.photo = file.file_id;
+        }
+
+        else if (file.media_type === "video") {
+          method = "sendVideo";
+          payload.video = file.file_id;
+        }
+
+        else if (file.media_type === "audio") {
+          method = "sendAudio";
+          payload.audio = file.file_id;
+        }
+
+        else if (file.media_type === "animation") {
+          method = "sendAnimation";
+          payload.animation = file.file_id;
+        }
+
+        else if (file.media_type === "voice") {
+          method = "sendVoice";
+          payload.voice = file.file_id;
+        }
+
+        else if (file.media_type === "sticker") {
+          method = "sendSticker";
+          payload.sticker = file.file_id;
+          delete payload.caption;
+        }
+
+        else {
+          payload.document = file.file_id;
+        }
+
         await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/sendDocument`,
-          {
-            chat_id: query.message.chat.id,
-            document: file.file_id,
-            caption: file.file_name
-          }
+          `https://api.telegram.org/bot${TOKEN}/${method}`,
+          payload
         );
 
         return res.sendStatus(200);
