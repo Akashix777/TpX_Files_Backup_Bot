@@ -88,7 +88,9 @@ app.post("/webhook", async (req, res) => {
 
         let file = null;
 
-        if (msg.document) {
+        const type = uploadType[chatId];
+
+        if (type === "document" && msg.document) {
 
           file = {
             file_id: msg.document.file_id,
@@ -97,15 +99,72 @@ app.post("/webhook", async (req, res) => {
           };
         }
 
-        else if (msg.audio) {
+        else if (type === "music" && msg.audio) {
 
           file = {
             file_id: msg.audio.file_id,
             file_name:
               msg.audio.file_name ||
               msg.audio.title ||
-              "Unnamed Audio"
+              "Unnamed Music"
           };
+        }
+
+        else if (type === "video" && msg.video) {
+
+          file = {
+            file_id: msg.video.file_id,
+            file_name:
+              msg.video.file_name || "Unnamed Video"
+          };
+        }
+
+        else if (type === "picture" && msg.photo) {
+
+          const photo =
+            msg.photo[msg.photo.length - 1];
+
+          file = {
+            file_id: photo.file_id,
+            file_name: "Photo"
+          };
+        }
+
+        else if (type === "gif" && msg.animation) {
+
+          file = {
+            file_id: msg.animation.file_id,
+            file_name:
+              msg.animation.file_name || "GIF"
+          };
+        }
+
+        else if (type === "sticker" && msg.sticker) {
+
+          file = {
+            file_id: msg.sticker.file_id,
+            file_name: "Sticker"
+          };
+        }
+
+        else if (type === "audio" && msg.voice) {
+
+          file = {
+            file_id: msg.voice.file_id,
+            file_name: "Voice Message"
+          };
+        }
+
+        else if (type === "other") {
+
+          if (msg.document) {
+
+            file = {
+              file_id: msg.document.file_id,
+              file_name:
+                msg.document.file_name || "Other File"
+            };
+          }
         }
 
         if (file) {
