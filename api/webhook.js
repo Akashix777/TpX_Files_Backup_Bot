@@ -331,6 +331,13 @@ I'm TpX Bot.`;
                   callback_data: "admin_upload"
                 }
               ],
+
+              [
+                {
+                  text: "📢 Broadcast",
+                  callback_data: "admin_broadcast"
+                }
+              ],
               [
                 {
                   text: "⬅ Back",
