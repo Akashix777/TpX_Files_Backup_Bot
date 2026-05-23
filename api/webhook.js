@@ -495,45 +495,7 @@ if (query.data === "admin_back") {
 
 
 
-      if (query.data === "back_admin_panel") {
-
-        uploadMode[query.message.chat.id] = false;
-        uploadType[query.message.chat.id] = null;
-
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-          {
-            chat_id: query.message.chat.id,
-            message_id: query.message.message_id,
-            text: "Admin Panel",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: "Upload",
-                    callback_data: "admin_upload"
-                  }
-                ],
-                [
-                  {
-                    text: "⬅ Back",
-                    callback_data: "admin_back"
-                  },
-                  {
-                    text: "🔒 Close",
-                    callback_data: "close_search"
-                  }
-                ]
-              ]
-            }
-          }
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-if (query.data === "close_start") {
+      if (query.data === "close_start") {
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
