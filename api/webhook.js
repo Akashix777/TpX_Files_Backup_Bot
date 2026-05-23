@@ -487,8 +487,8 @@ if (command.startsWith("/list")) {
                 ],
                 [
                   {
-                    text: "⬅ Back",
-                    callback_data: "back_admin_panel"
+                    text: "🔒 Close",
+                    callback_data: "close_search"
                   }
                 ]
               ]
@@ -521,8 +521,8 @@ if (command.startsWith("/list")) {
                 ],
                 [
                   {
-                    text: "⬅ Back",
-                    callback_data: "back_admin_panel"
+                    text: "🔒 Close",
+                    callback_data: "close_search"
                   }
                 ]
               ]
@@ -548,8 +548,8 @@ if (command.startsWith("/list")) {
               inline_keyboard: [
                 [
                   {
-                    text: "⬅ Back",
-                    callback_data: "back_admin_panel"
+                    text: "🔒 Close",
+                    callback_data: "close_search"
                   }
                 ]
               ]
@@ -677,10 +677,6 @@ if (query.data === "admin_back") {
                   }
                 ],
                 [
-                  {
-                    text: "⬅ Back",
-                    callback_data: "admin_back"
-                  },
                   {
                     text: "🔒 Close",
                     callback_data: "close_search"
