@@ -694,8 +694,7 @@ if (query.data === "admin_back") {
 
         let method = "sendDocument";
         let payload = {
-          chat_id: query.message.chat.id,
-          caption: file.file_name
+          chat_id: query.message.chat.id
         };
 
         if (file.media_type === "photo") {
@@ -730,7 +729,30 @@ if (query.data === "admin_back") {
         }
 
         else {
+
           payload.document = file.file_id;
+
+          const lower =
+            (file.file_name || "").toLowerCase();
+
+          const captionExtensions = [
+            ".txt",
+            ".zip",
+            ".7z",
+            ".rar",
+            ".tar",
+            ".db",
+            ".php"
+          ];
+
+          const shouldCaption =
+            captionExtensions.some(ext =>
+              lower.endsWith(ext)
+            );
+
+          if (shouldCaption) {
+            payload.caption = file.file_name;
+          }
         }
 
         await axios.post(
