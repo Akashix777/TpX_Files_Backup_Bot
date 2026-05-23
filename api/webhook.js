@@ -370,6 +370,8 @@ if (command.startsWith("/list")) {
             message_id: query.message.message_id
           }
         );
+
+        return res.sendStatus(200);
       }
 
       
@@ -589,6 +591,8 @@ if (query.data === "admin_back") {
             message_id: query.message.message_id
           }
         );
+
+        return res.sendStatus(200);
       }
 
 
@@ -689,6 +693,8 @@ if (query.data === "admin_back") {
             caption: file.file_name
           }
         );
+
+        return res.sendStatus(200);
       }
     }
 
