@@ -278,6 +278,9 @@ if (command.startsWith("/list")) {
 
       if (query.data === "close_search") {
 
+        uploadMode[query.message.chat.id] = false;
+        uploadType[query.message.chat.id] = null;
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
           {
@@ -455,6 +458,9 @@ if (query.data === "admin_back") {
       
       if (query.data === "back_admin_panel") {
 
+        uploadMode[query.message.chat.id] = false;
+        uploadType[query.message.chat.id] = null;
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
@@ -490,6 +496,9 @@ if (query.data === "admin_back") {
 
 
       if (query.data === "back_admin_panel") {
+
+        uploadMode[query.message.chat.id] = false;
+        uploadType[query.message.chat.id] = null;
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
