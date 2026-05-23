@@ -544,23 +544,26 @@ if (query.data === "admin_back") {
 
         const nav = [];
 
-        if (page > 1) {
-          nav.push({
-            text: "⬅ Prev",
-            callback_data: `next_${keyword}_${page - 1}`
-          });
-        }
+        nav.push({
+          text: page > 1 ? "❮" : "•",
+          callback_data: page > 1
+            ? `next_${keyword}_${page - 1}`
+            : "page_info"
+        });
 
-        if (page < totalPages) {
-          nav.push({
-            text: "➡ Next",
-            callback_data: `next_${keyword}_${page + 1}`
-          });
-        }
+        nav.push({
+          text: `${page}/${totalPages}`,
+          callback_data: "page_info"
+        });
 
-        if (nav.length) {
-          buttons.push(nav);
-        }
+        nav.push({
+          text: page < totalPages ? "❯" : "•",
+          callback_data: page < totalPages
+            ? `next_${keyword}_${page + 1}`
+            : "page_info"
+        });
+
+        buttons.push(nav);
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
