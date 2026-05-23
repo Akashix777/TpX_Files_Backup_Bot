@@ -84,20 +84,43 @@ app.post("/webhook", async (req, res) => {
 
 
 
-      if (uploadMode[chatId] && msg.document && String(chatId) === String(ADMIN_ID)) {
+      if (uploadMode[chatId] && String(chatId) === String(ADMIN_ID)) {
 
-        const doc = msg.document;
+        let file = null;
 
-        await db.files.insertOne({
-          file_id: doc.file_id,
-          file_name: doc.file_name || "Unnamed File",
-          uploaded_at: new Date()
-        });
+        if (msg.document) {
 
-        await sendMessage(
-          chatId,
-          `✅ Saved: ${doc.file_name}`
-        );
+          file = {
+            file_id: msg.document.file_id,
+            file_name:
+              msg.document.file_name || "Unnamed File"
+          };
+        }
+
+        else if (msg.audio) {
+
+          file = {
+            file_id: msg.audio.file_id,
+            file_name:
+              msg.audio.file_name ||
+              msg.audio.title ||
+              "Unnamed Audio"
+          };
+        }
+
+        if (file) {
+
+          await db.files.insertOne({
+            file_id: file.file_id,
+            file_name: file.file_name,
+            uploaded_at: new Date()
+          });
+
+          await sendMessage(
+            chatId,
+            `✅ Saved: ${file.file_name}`
+          );
+        }
       }
 
       if (command.startsWith("/start")) {
