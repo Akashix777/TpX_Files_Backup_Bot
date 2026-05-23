@@ -369,6 +369,7 @@ if (command.startsWith("/list")) {
 
         uploadMode[query.message.chat.id] = false;
         uploadType[query.message.chat.id] = null;
+        broadcastMode[query.message.chat.id] = false;
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
@@ -386,6 +387,7 @@ if (command.startsWith("/list")) {
 
         uploadMode[query.message.chat.id] = false;
         uploadType[query.message.chat.id] = null;
+        broadcastMode[query.message.chat.id] = false;
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
@@ -457,6 +459,101 @@ if (command.startsWith("/list")) {
 
 
       
+
+      if (query.data === "admin_broadcast") {
+
+        broadcastMode[query.message.chat.id] = false;
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text: "Broadcast Confirmation",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "Are you sure? If yes then tap 🕹️",
+                    callback_data: "confirm_broadcast"
+                  }
+                ],
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "back_admin_panel"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+      if (query.data === "confirm_broadcast") {
+
+        broadcastMode[query.message.chat.id] = true;
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text:
+              "Broadcast mode active.",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "❌ Stop Broadcast",
+                    callback_data: "stop_broadcast"
+                  }
+                ],
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "back_admin_panel"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+      if (query.data === "stop_broadcast") {
+
+        broadcastMode[query.message.chat.id] = false;
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text: "Broadcast stopped.",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "back_admin_panel"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
       const uploadButtons = [
         "upload_video",
         "upload_document",
@@ -510,6 +607,7 @@ if (command.startsWith("/list")) {
 
         uploadMode[query.message.chat.id] = false;
         uploadType[query.message.chat.id] = null;
+        broadcastMode[query.message.chat.id] = false;
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
@@ -548,6 +646,7 @@ if (query.data === "admin_back") {
 
         uploadMode[query.message.chat.id] = false;
         uploadType[query.message.chat.id] = null;
+        broadcastMode[query.message.chat.id] = false;
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
@@ -561,6 +660,13 @@ if (query.data === "admin_back") {
                   {
                     text: " Upload ",
                     callback_data: "admin_upload"
+                  }
+                ],
+
+                [
+                  {
+                    text: "📢 Broadcast",
+                    callback_data: "admin_broadcast"
                   }
                 ],
                 [
