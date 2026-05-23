@@ -395,26 +395,21 @@ if (command.startsWith("/list")) {
             text: "Upload",
             reply_markup: {
               inline_keyboard: [
-
                 [
                   {
-                    text: " Picture ",
-                    callback_data: "upload_picture"
-                  },
-                  {
-                    text: " Video ",
-                    callback_data: "upload_video"
+                    text: " File / Document / etc. ",
+                    callback_data: "upload_document"
                   }
                 ],
 
                 [
                   {
-                    text: " File / Document ",
-                    callback_data: "upload_document"
-                  },
-                  {
                     text: " Audio ",
                     callback_data: "upload_audio"
+                  },
+                  {
+                    text: " Video ",
+                    callback_data: "upload_video"
                   }
                 ],
 
@@ -463,7 +458,6 @@ if (command.startsWith("/list")) {
 
       
       const uploadButtons = [
-        "upload_picture",
         "upload_video",
         "upload_document",
         "upload_audio",
