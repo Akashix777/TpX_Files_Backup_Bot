@@ -293,6 +293,9 @@ if (command.startsWith("/list")) {
       
       if (query.data === "admin_upload") {
 
+        uploadMode[query.message.chat.id] = false;
+        uploadType[query.message.chat.id] = null;
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
