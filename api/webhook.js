@@ -710,6 +710,13 @@ if (query.data === "admin_back") {
       }
 
 
+      if (query.data === "page_info") {
+
+        return res.sendStatus(200);
+      }
+
+
+
       if (query.data.startsWith("next_")) {
 
         const parts = query.data.split("_");
