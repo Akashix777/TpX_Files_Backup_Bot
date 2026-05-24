@@ -523,10 +523,6 @@ if (command.startsWith("/list")) {
                 ],
                 [
                   {
-                    text: "⬅ Back",
-                    callback_data: "back_admin_panel"
-                  },
-                  {
                     text: "🔒 Close",
                     callback_data: "close_search"
                   }
@@ -553,10 +549,6 @@ if (command.startsWith("/list")) {
             reply_markup: {
               inline_keyboard: [
                 [
-                  {
-                    text: "⬅ Back",
-                    callback_data: "back_admin_panel"
-                  },
                   {
                     text: "🔒 Close",
                     callback_data: "close_search"
