@@ -193,19 +193,6 @@ app.post("/webhook", async (req, res) => {
 
       if (command.startsWith("/start")) {
 
-        await db.users.updateOne(
-          { chat_id: chatId },
-          {
-            $set: {
-              chat_id: chatId,
-              first_name: msg.from.first_name || "",
-              username: msg.from.username || "",
-              joined_at: new Date()
-            }
-          },
-          { upsert: true }
-        );
-
         const user_name = msg.from.first_name || "User";
 
         const caption =
