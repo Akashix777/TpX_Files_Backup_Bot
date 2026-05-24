@@ -191,6 +191,46 @@ app.post("/webhook", async (req, res) => {
         }
       }
 
+      if (
+        broadcastMode[chatId] &&
+        String(chatId) === String(ADMIN_ID)
+      ) {
+
+        const users = await db.users.find({}).toArray();
+
+        let success = 0;
+        let failed = 0;
+
+        for (const user of users) {
+
+          try {
+
+            await axios.post(
+              `https://api.telegram.org/bot${TOKEN}/copyMessage`,
+              {
+                chat_id: user.chat_id,
+                from_chat_id: chatId,
+                message_id: msg.message_id
+              }
+            );
+
+            success++;
+
+          } catch (err) {
+
+            failed++;
+          }
+        }
+
+        await sendMessage(
+          chatId,
+          `📢 Broadcast completed.\n\n✅ Success: ${success}\n❌ Failed: ${failed}`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
       if (command.startsWith("/start")) {
 
         await db.users.updateOne(
