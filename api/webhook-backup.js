@@ -340,12 +340,12 @@ I'm TpX Bot.`;
                   callback_data: "admin_broadcast"
                 }
               ],
-              [
-                {
-                  text: "🔒 Close",
-                  callback_data: "close_search"
-                }
-              ]
+                [
+                  {
+                    text: "🔒 Close",
+                    callback_data: "close_search"
+                  }
+                ]
             ]
           }
         );
@@ -439,10 +439,7 @@ if (command.startsWith("/list")) {
                   {
                     text: " Other ",
                     callback_data: "upload_other"
-                  }
-                ],
-
-                [
+                },
                   {
                     text: "⬅ Back",
                     callback_data: "back_admin_panel"
@@ -450,13 +447,10 @@ if (command.startsWith("/list")) {
                   {
                     text: "🔒 Close",
                     callback_data: "close_search"
-                  }
-                ]
-
+              }
               ]
-            }
-          }
-        );
+              }
+              }
 
         return res.sendStatus(200);
       }
@@ -493,10 +487,7 @@ if (command.startsWith("/list")) {
                     callback_data: "close_search"
                   }
                 ]
-              ]
-            }
-          }
-        );
+                ]
 
         return res.sendStatus(200);
       }
