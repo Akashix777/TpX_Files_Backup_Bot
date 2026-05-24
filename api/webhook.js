@@ -489,6 +489,10 @@ if (command.startsWith("/list")) {
                 ],
                 [
                   {
+                    text: "⬅ Back",
+                    callback_data: "back_admin_panel"
+                  },
+                  {
                     text: "🔒 Close",
                     callback_data: "close_search"
                   }
