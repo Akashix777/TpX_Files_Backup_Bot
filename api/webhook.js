@@ -21,6 +21,10 @@ const uploadType = {};
 
 const broadcastMode = {};
 
+const banMode = {};
+
+const pendingBanId = {};
+
 
 
 async function getDB() {
@@ -83,6 +87,19 @@ app.post("/webhook", async (req, res) => {
       const chatId = msg.chat.id;
       const text = msg.text || "";
       const command = text.toLowerCase();
+
+      const existingUser =
+        await db.users.findOne({
+          chat_id: chatId
+        });
+
+      if (
+        existingUser &&
+        existingUser.banned === true
+      ) {
+
+        return res.sendStatus(200);
+      }
 
 
 
@@ -231,7 +248,60 @@ app.post("/webhook", async (req, res) => {
       }
 
 
-      if (command.startsWith("/start")) {
+      
+
+      if (
+        banMode[chatId] &&
+        String(chatId) === String(ADMIN_ID)
+      ) {
+
+        const targetId = text.trim();
+
+        if (!/^\d+$/.test(targetId)) {
+
+          await sendMessage(
+            chatId,
+            "❌ Invalid Chat ID."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        pendingBanId[chatId] =
+          targetId;
+
+        banMode[chatId] = false;
+
+        await sendMessage(
+          chatId,
+`⚠ Confirm Ban?
+
+User ID: ${targetId}`,
+          {
+            inline_keyboard: [
+              [
+                {
+                  text: "✅ Confirm Ban",
+                  callback_data:
+                    `confirm_ban_${targetId}`
+                }
+              ],
+              [
+                {
+                  text: "❌ Cancel",
+                  callback_data:
+                    "cancel_ban"
+                }
+              ]
+            ]
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+if (command.startsWith("/start")) {
 
         await db.users.updateOne(
           { chat_id: chatId },
@@ -397,6 +467,18 @@ I'm TpX Bot.`;
                 {
                   text: "📊 User Stats",
                   callback_data: "user_stats"
+                }
+              ],
+              [
+                {
+                  text: "🔨 Ban User",
+                  callback_data: "ban_user"
+                }
+              ],
+              [
+                {
+                  text: "🚫 Banned Users",
+                  callback_data: "banned_users"
                 }
               ],
               [
@@ -696,6 +778,364 @@ ${userText}`,
                   {
                     text: "🔒 Close",
                     callback_data: "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+
+      if (query.data === "ban_user") {
+
+        banMode[query.message.chat.id] = true;
+
+        pendingBanId[
+          query.message.chat.id
+        ] = null;
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text:
+`🔨 Ban User
+
+Send the user Chat ID you want to ban.`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "back_admin_panel"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data: "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+
+      if (
+        query.data.startsWith(
+          "confirm_ban_"
+        )
+      ) {
+
+        const targetId =
+          Number(
+            query.data.replace(
+              "confirm_ban_",
+              ""
+            )
+          );
+
+        await db.users.updateOne(
+          {
+            chat_id: targetId
+          },
+          {
+            $set: {
+              banned: true
+            }
+          }
+        );
+
+        pendingBanId[
+          query.message.chat.id
+        ] = null;
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text:
+`✅ User banned successfully.
+
+User ID: ${targetId}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data:
+                      "back_admin_panel"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+      if (query.data === "cancel_ban") {
+
+        pendingBanId[
+          query.message.chat.id
+        ] = null;
+
+        banMode[
+          query.message.chat.id
+        ] = false;
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text:
+              "❌ Ban cancelled.",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data:
+                      "back_admin_panel"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+
+      if (query.data === "banned_users") {
+
+        const users = await db.users
+          .find({
+            banned: true
+          })
+          .toArray();
+
+        const buttons = users.map((user) => {
+
+          const name =
+            user.first_name || "Unknown";
+
+          const username =
+            user.username
+              ? ` (@${user.username})`
+              : "";
+
+          return [
+            {
+              text:
+                `👤 ${name}${username}`,
+              callback_data:
+                `unban_user_${user.chat_id}`
+            }
+          ];
+        });
+
+        buttons.push([
+          {
+            text: "⬅ Back",
+            callback_data:
+              "back_admin_panel"
+          },
+          {
+            text: "🔒 Close",
+            callback_data:
+              "close_search"
+          }
+        ]);
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+              "🚫 Banned Users List",
+            reply_markup: {
+              inline_keyboard:
+                buttons
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+
+      if (
+        query.data.startsWith(
+          "unban_user_"
+        )
+      ) {
+
+        const targetId =
+          Number(
+            query.data.replace(
+              "unban_user_",
+              ""
+            )
+          );
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`⚠ Confirm Unban?
+
+User ID: ${targetId}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "✅ Confirm Unban",
+                    callback_data:
+                      `confirm_unban_${targetId}`
+                  }
+                ],
+                [
+                  {
+                    text: "❌ Cancel",
+                    callback_data:
+                      "cancel_unban"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+
+      if (
+        query.data.startsWith(
+          "confirm_unban_"
+        )
+      ) {
+
+        const targetId =
+          Number(
+            query.data.replace(
+              "confirm_unban_",
+              ""
+            )
+          );
+
+        await db.users.updateOne(
+          {
+            chat_id: targetId
+          },
+          {
+            $unset: {
+              banned: ""
+            }
+          }
+        );
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`✅ User unbanned successfully.
+
+User ID: ${targetId}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data:
+                      "banned_users"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+      if (
+        query.data === "cancel_unban"
+      ) {
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+              "❌ Unban cancelled.",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data:
+                      "banned_users"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data:
+                      "close_search"
                   }
                 ]
               ]
