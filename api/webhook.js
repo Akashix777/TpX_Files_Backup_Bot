@@ -526,28 +526,27 @@ I'm TpX Bot.`;
         }
 
         let resultText =
-          `🔎 History Search: ${keyword}\n\n`;
+          `🔎 History Search: ${keyword}`;
 
         const buttons = [];
 
         results.forEach((item) => {
 
-          resultText +=
-`${item.action.toUpperCase()} • ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
-
-`;
+          const icon =
+            item.action === "delete"
+              ? "🗑️"
+              : "📤";
 
           buttons.push([
             {
               text:
-                `📦 ${item.file_name.slice(0, 45)}`,
+`${icon} ${item.file_name.slice(0, 45)}
+${item.action.toUpperCase()} • ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}`,
 
               callback_data:
                 `historyfile_${item._id}`
             }
           ]);
-
-          resultText += `\n`;
         });
 
         buttons.push([
