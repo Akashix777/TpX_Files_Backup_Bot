@@ -36,7 +36,8 @@ async function getDB() {
     files: client.db("telegramBot").collection("files"),
     notes: client.db("telegramBot").collection("notes"),
     users: client.db("telegramBot").collection("users"),
-    history: client.db("telegramBot").collection("history")
+    history: client.db("telegramBot").collection("history"),
+    searches: client.db("telegramBot").collection("searches")
   };
 }
 
@@ -206,6 +207,7 @@ app.post("/webhook", async (req, res) => {
 
           await db.history.insertOne({
             action: "upload",
+            file_id: file.file_id,
             file_name: file.file_name,
             media_type:
               file.media_type || "unknown",
@@ -361,6 +363,16 @@ I'm TpX Bot.`;
           return res.sendStatus(200);
         }
 
+        await db.searches.insertOne({
+          user_id: chatId,
+          first_name:
+            msg.from.first_name || "",
+          username:
+            msg.from.username || "",
+          keyword: keyword,
+          timestamp: new Date()
+        });
+
         const results = await db.files.find({
           file_name: {
             $regex: keyword,
@@ -514,18 +526,22 @@ I'm TpX Bot.`;
         }
 
         let resultText =
-          `🔎 History Search: ${keyword}\n\n`;
+          `🔎 History Search: ${keyword}`;
+
+        const buttons = [];
 
         results.forEach((item) => {
 
-          resultText +=
-`${item.action.toUpperCase()} • ${item.file_name}
-${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
+          buttons.push([
+            {
+              text:
+                `📦 ${item.file_name.slice(0, 45)}`,
 
-`;
+              callback_data:
+                `historyfile_${item._id}`
+            }
+          ]);
         });
-
-        const buttons = [];
 
         buttons.push([
           {
@@ -543,14 +559,6 @@ ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
               totalPages > 1
                 ? `allsearch_${keyword}_2`
                 : "noop"
-          }
-        ]);
-
-        buttons.push([
-          {
-            text: " 🔎 Search Again ",
-            callback_data:
-              "search_history"
           }
         ]);
 
@@ -828,6 +836,16 @@ if (command.startsWith("/list")) {
                     callback_data: "total_users"
                   }
                 ],
+
+                [
+                  {
+                    text:
+                      " 🔎 All Users Searches ",
+                    callback_data:
+                      "all_users_searches"
+                  }
+                ],
+
                 [
                   {
                     text: "⬅ Back",
@@ -975,6 +993,168 @@ ${userText}`,
                   {
                     text: " 🔒 Close ",
                     callback_data: "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+
+      if (
+        query.data ===
+        "all_users_searches"
+      ) {
+
+        const users =
+          await db.searches.aggregate([
+            {
+              $group: {
+                _id: "$user_id",
+                first_name: {
+                  $first:
+                    "$first_name"
+                },
+                username: {
+                  $first:
+                    "$username"
+                }
+              }
+            },
+            {
+              $limit: 20
+            }
+          ]).toArray();
+
+        const buttons =
+          users.map((user) => {
+
+            const username =
+              user.username
+                ? ` (@${user.username})`
+                : "";
+
+            return [
+              {
+                text:
+                  `👤 ${user.first_name}${username}`,
+
+                callback_data:
+                  `view_searches_${user._id}`
+              }
+            ];
+          });
+
+        buttons.push([
+          {
+            text: "⬅ Back",
+            callback_data:
+              "user_stats"
+          },
+          {
+            text: " 🔒 Close ",
+            callback_data:
+              "close_search"
+          }
+        ]);
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+
+            message_id:
+              query.message.message_id,
+
+            text:
+`🔎 All Users Searches
+
+Select a user.`,
+
+            reply_markup: {
+              inline_keyboard:
+                buttons
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+
+      if (
+        query.data.startsWith(
+          "view_searches_"
+        )
+      ) {
+
+        const userId =
+          Number(
+            query.data.replace(
+              "view_searches_",
+              ""
+            )
+          );
+
+        const searches =
+          await db.searches.find({
+            user_id: userId
+          })
+          .sort({
+            timestamp: -1
+          })
+          .limit(20)
+          .toArray();
+
+        if (!searches.length) {
+
+          return res.sendStatus(200);
+        }
+
+        let textMessage =
+          `🔎 User Searches\n\n`;
+
+        searches.forEach((item) => {
+
+          textMessage +=
+`${item.keyword}
+${new Date(item.timestamp).toLocaleString()}
+
+`;
+        });
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+
+            message_id:
+              query.message.message_id,
+
+            text:
+              textMessage,
+
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data:
+                      "all_users_searches"
+                  },
+                  {
+                    text: " 🔒 Close ",
+                    callback_data:
+                      "close_search"
                   }
                 ]
               ]
@@ -2046,6 +2226,140 @@ ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
                 buttons
             }
           }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+      if (
+        query.data.startsWith(
+          "historyfile_"
+        )
+      ) {
+
+        const historyId =
+          query.data.replace(
+            "historyfile_",
+            ""
+          );
+
+        const file =
+          await db.history.findOne({
+            _id: new ObjectId(historyId)
+          });
+
+        if (
+          !file
+          ||
+          !file.file_id
+        ) {
+
+          await axios.post(
+            `https://api.telegram.org/bot${TOKEN}/answerCallbackQuery`,
+            {
+              callback_query_id:
+                query.id,
+
+              text:
+                "Old history entry cannot be recovered.",
+
+              show_alert: true
+            }
+          );
+
+          return res.sendStatus(200);
+        }
+
+        let method =
+          "sendDocument";
+
+        let payload = {
+          chat_id:
+            query.message.chat.id
+        };
+
+        if (
+          file.media_type ===
+          "photo"
+        ) {
+
+          method =
+            "sendPhoto";
+
+          payload.photo =
+            file.file_id;
+        }
+
+        else if (
+          file.media_type ===
+          "video"
+        ) {
+
+          method =
+            "sendVideo";
+
+          payload.video =
+            file.file_id;
+        }
+
+        else if (
+          file.media_type ===
+          "audio"
+        ) {
+
+          method =
+            "sendAudio";
+
+          payload.audio =
+            file.file_id;
+        }
+
+        else if (
+          file.media_type ===
+          "animation"
+        ) {
+
+          method =
+            "sendAnimation";
+
+          payload.animation =
+            file.file_id;
+        }
+
+        else if (
+          file.media_type ===
+          "voice"
+        ) {
+
+          method =
+            "sendVoice";
+
+          payload.voice =
+            file.file_id;
+        }
+
+        else if (
+          file.media_type ===
+          "sticker"
+        ) {
+
+          method =
+            "sendSticker";
+
+          payload.sticker =
+            file.file_id;
+        }
+
+        else {
+
+          payload.document =
+            file.file_id;
+        }
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/${method}`,
+          payload
         );
 
         return res.sendStatus(200);
