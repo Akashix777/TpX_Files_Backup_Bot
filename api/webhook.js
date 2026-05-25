@@ -341,7 +341,7 @@ I'm TpX Bot.`;
           inline_keyboard: [
             [
               {
-                text: "🔒 Close",
+                text: " 🔒 Close ",
                 callback_data: "close_start"
               }
             ]
@@ -409,7 +409,7 @@ I'm TpX Bot.`;
 
         buttons.push([
           {
-            text: "🔒 Close",
+            text: " 🔒 Close ",
             callback_data: "close_search"
           }
         ]);
@@ -466,7 +466,7 @@ I'm TpX Bot.`;
             inline_keyboard: [
               [
                 {
-                  text: "🗃️ Upload",
+                  text: " 🗃️ Upload ",
                   callback_data: "admin_upload"
                 },
                 {
@@ -477,7 +477,7 @@ I'm TpX Bot.`;
 
               [
                 {
-                  text: "📢 Broadcast",
+                  text: " 📢 Broadcast ",
                   callback_data: "admin_broadcast"
                 },
                 {
@@ -488,7 +488,7 @@ I'm TpX Bot.`;
 
               [
                 {
-                  text: "📊 User Stats",
+                  text: " 📊 User Stats ",
                   callback_data: "user_stats"
                 },
                 {
@@ -499,7 +499,7 @@ I'm TpX Bot.`;
 
               [
                 {
-                  text: "🔨 Ban User",
+                  text: " 🔨 Ban User ",
                   callback_data: "ban_user"
                 },
                 {
@@ -510,11 +510,11 @@ I'm TpX Bot.`;
 
               [
                 {
-                  text: "🚫 Banned Users",
+                  text: " 🚫 Banned Users ",
                   callback_data: "banned_users"
                 },
                 {
-                  text: "🔎 Search History",
+                  text: " 🔎 Search History ",
                   callback_data: "search_history"
                 }
               ],
@@ -522,14 +522,14 @@ I'm TpX Bot.`;
               [
                 {
                   text:
-                    "🕘 View Upload/Delete History",
+                    " 🕘 View Upload/Delete History ",
                   callback_data: "upload_history"
                 }
               ],
 
               [
                 {
-                  text: "🔒 Close",
+                  text: " 🔒 Close ",
                   callback_data: "close_search"
                 }
               ]
@@ -635,7 +635,7 @@ if (command.startsWith("/list")) {
                     callback_data: "back_admin_panel"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
@@ -683,7 +683,7 @@ if (command.startsWith("/list")) {
                     callback_data: "back_admin_panel"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
@@ -742,7 +742,7 @@ if (command.startsWith("/list")) {
             callback_data: "user_stats"
           },
           {
-            text: "🔒 Close",
+            text: " 🔒 Close ",
             callback_data: "close_search"
           }
         ]);
@@ -822,7 +822,7 @@ ${userText}`,
                     callback_data: "total_users"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
@@ -862,7 +862,7 @@ Send the user Chat ID you want to ban.`,
                     callback_data: "back_admin_panel"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
@@ -924,7 +924,7 @@ User ID: ${targetId}`,
                       "back_admin_panel"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data:
                       "close_search"
                   }
@@ -965,7 +965,7 @@ User ID: ${targetId}`,
                       "back_admin_panel"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data:
                       "close_search"
                   }
@@ -1016,7 +1016,7 @@ User ID: ${targetId}`,
               "back_admin_panel"
           },
           {
-            text: "🔒 Close",
+            text: " 🔒 Close ",
             callback_data:
               "close_search"
           }
@@ -1142,7 +1142,7 @@ User ID: ${targetId}`,
                       "banned_users"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data:
                       "close_search"
                   }
@@ -1179,7 +1179,7 @@ User ID: ${targetId}`,
                       "banned_users"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data:
                       "close_search"
                   }
@@ -1298,7 +1298,7 @@ ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
               "back_admin_panel"
           },
           {
-            text: "🔒 Close",
+            text: " 🔒 Close ",
             callback_data:
               "close_search"
           }
@@ -1347,7 +1347,7 @@ if (query.data === "admin_broadcast") {
                     callback_data: "back_admin_panel"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
@@ -1385,7 +1385,7 @@ if (query.data === "admin_broadcast") {
                     callback_data: "back_admin_panel"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
@@ -1416,7 +1416,7 @@ if (query.data === "admin_broadcast") {
                     callback_data: "back_admin_panel"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
@@ -1466,7 +1466,7 @@ if (query.data === "admin_broadcast") {
                     callback_data: "admin_upload"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
@@ -1498,7 +1498,7 @@ if (query.data === "admin_broadcast") {
                     callback_data: "admin_upload"
                   },
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
@@ -1533,7 +1533,7 @@ if (query.data === "admin_back") {
               inline_keyboard: [
                 [
                   {
-                    text: "🗃️ Upload",
+                    text: " 🗃️ Upload ",
                     callback_data: "admin_upload"
                   },
                   {
@@ -1544,7 +1544,7 @@ if (query.data === "admin_back") {
 
                 [
                   {
-                    text: "📢 Broadcast",
+                    text: " 📢 Broadcast ",
                     callback_data: "admin_broadcast"
                   },
                   {
@@ -1555,7 +1555,7 @@ if (query.data === "admin_back") {
 
                 [
                   {
-                    text: "📊 User Stats",
+                    text: " 📊 User Stats ",
                     callback_data: "user_stats"
                   },
                   {
@@ -1566,7 +1566,7 @@ if (query.data === "admin_back") {
 
                 [
                   {
-                    text: "🔨 Ban User",
+                    text: " 🔨 Ban User ",
                     callback_data: "ban_user"
                   },
                   {
@@ -1577,11 +1577,11 @@ if (query.data === "admin_back") {
 
                 [
                   {
-                    text: "🚫 Banned Users",
+                    text: " 🚫 Banned Users ",
                     callback_data: "banned_users"
                   },
                   {
-                    text: "🔎 Search History",
+                    text: " 🔎 Search History ",
                     callback_data: "search_history"
                   }
                 ],
@@ -1589,14 +1589,14 @@ if (query.data === "admin_back") {
                 [
                   {
                     text:
-                      "🕘 View Upload/Delete History",
+                      " 🕘 View Upload/Delete History ",
                     callback_data: "upload_history"
                   }
                 ],
 
                 [
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
@@ -1697,7 +1697,7 @@ if (query.data === "admin_back") {
                 ...buttons,
                 [
                   {
-                    text: "🔒 Close",
+                    text: " 🔒 Close ",
                     callback_data: "close_search"
                   }
                 ]
