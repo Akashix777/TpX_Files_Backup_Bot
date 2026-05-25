@@ -33,7 +33,8 @@ async function getDB() {
   return {
     files: client.db("telegramBot").collection("files"),
     notes: client.db("telegramBot").collection("notes"),
-    users: client.db("telegramBot").collection("users")
+    users: client.db("telegramBot").collection("users"),
+    history: client.db("telegramBot").collection("history")
   };
 }
 
@@ -199,6 +200,15 @@ app.post("/webhook", async (req, res) => {
             file_id: file.file_id,
             file_name: file.file_name,
             uploaded_at: new Date()
+          });
+
+          await db.history.insertOne({
+            action: "upload",
+            file_name: file.file_name,
+            media_type:
+              file.media_type || "unknown",
+            admin_id: chatId,
+            timestamp: new Date()
           });
 
           await sendMessage(
@@ -481,6 +491,12 @@ I'm TpX Bot.`;
                 {
                   text: "🚫 Banned Users",
                   callback_data: "banned_users"
+                }
+              ],
+              [
+                {
+                  text: "🕘 Upload/Delete History",
+                  callback_data: "upload_history"
                 }
               ],
               [
@@ -1149,6 +1165,74 @@ User ID: ${targetId}`,
       }
 
 
+
+
+      if (
+        query.data ===
+        "upload_history"
+      ) {
+
+        const history =
+          await db.history
+            .find({})
+            .sort({
+              timestamp: -1
+            })
+            .limit(10)
+            .toArray();
+
+        let historyText =
+          "📄 Latest History\n\n";
+
+        if (!history.length) {
+
+          historyText +=
+            "No history found.";
+        }
+
+        else {
+
+          history.forEach((item) => {
+
+            historyText +=
+`${item.action.toUpperCase()} • ${item.file_name}
+${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
+
+`;
+          });
+        }
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text: historyText,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data:
+                      "back_admin_panel"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
 if (query.data === "admin_broadcast") {
 
         broadcastMode[query.message.chat.id] = false;
@@ -1386,6 +1470,12 @@ if (query.data === "admin_back") {
                   {
                     text: "🚫 Banned Users",
                     callback_data: "banned_users"
+                  }
+                ],
+                [
+                  {
+                    text: "🕘 Upload/Delete History",
+                    callback_data: "upload_history"
                   }
                 ],
                 [
