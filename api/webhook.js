@@ -526,7 +526,7 @@ I'm TpX Bot.`;
         }
 
         let resultText =
-          `🔎 History Search: ${keyword}`;
+          `🔎 History Search: ${keyword}ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ`;
 
         const buttons = [];
 
