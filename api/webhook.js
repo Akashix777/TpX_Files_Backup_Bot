@@ -1169,8 +1169,42 @@ User ID: ${targetId}`,
 
       if (
         query.data ===
-        "upload_history"
+          "upload_history"
+        ||
+        query.data.startsWith(
+          "history_page_"
+        )
       ) {
+
+        let page = 1;
+
+        if (
+          query.data.startsWith(
+            "history_page_"
+          )
+        ) {
+
+          page = Number(
+            query.data.replace(
+              "history_page_",
+              ""
+            )
+          );
+        }
+
+        const limit = 10;
+
+        const totalHistory =
+          await db.history
+            .countDocuments();
+
+        const totalPages =
+          Math.max(
+            1,
+            Math.ceil(
+              totalHistory / limit
+            )
+          );
 
         const history =
           await db.history
@@ -1178,11 +1212,14 @@ User ID: ${targetId}`,
             .sort({
               timestamp: -1
             })
-            .limit(10)
+            .skip(
+              (page - 1) * limit
+            )
+            .limit(limit)
             .toArray();
 
         let historyText =
-          "📄 Latest History\n\n";
+          `📄 History Page ${page}/${totalPages}\n\n`;
 
         if (!history.length) {
 
@@ -1202,6 +1239,43 @@ ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
           });
         }
 
+        const buttons = [];
+
+        buttons.push([
+          {
+            text: "❮",
+            callback_data:
+              page > 1
+                ? `history_page_${page - 1}`
+                : "noop"
+          },
+          {
+            text:
+              `${page}/${totalPages}`,
+            callback_data: "noop"
+          },
+          {
+            text: "❯",
+            callback_data:
+              page < totalPages
+                ? `history_page_${page + 1}`
+                : "noop"
+          }
+        ]);
+
+        buttons.push([
+          {
+            text: "⬅ Back",
+            callback_data:
+              "back_admin_panel"
+          },
+          {
+            text: "🔒 Close",
+            callback_data:
+              "close_search"
+          }
+        ]);
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
@@ -1211,20 +1285,8 @@ ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
               query.message.message_id,
             text: historyText,
             reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: "⬅ Back",
-                    callback_data:
-                      "back_admin_panel"
-                  },
-                  {
-                    text: "🔒 Close",
-                    callback_data:
-                      "close_search"
-                  }
-                ]
-              ]
+              inline_keyboard:
+                buttons
             }
           }
         );
