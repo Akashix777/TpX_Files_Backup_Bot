@@ -259,6 +259,8 @@ app.post("/webhook", async (req, res) => {
 
         if (!/^\d+$/.test(targetId)) {
 
+          banMode[chatId] = false;
+
           await sendMessage(
             chatId,
             "❌ Invalid Chat ID."
