@@ -424,6 +424,157 @@ I'm TpX Bot.`;
       }
 
       
+      if (
+        command.startsWith(
+          "/allsearch"
+        )
+      ) {
+
+        if (
+          String(chatId)
+          !==
+          String(ADMIN_ID)
+        ) {
+
+          return res.sendStatus(200);
+        }
+
+        const keyword =
+          text
+            .split(" ")
+            .slice(1)
+            .join(" ")
+            .trim();
+
+        if (!keyword) {
+
+          await sendMessage(
+            chatId,
+            "Usage: /allsearch keyword"
+          );
+
+          return res.sendStatus(200);
+        }
+
+        setTimeout(async () => {
+
+          try {
+
+            await axios.post(
+              `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+              {
+                chat_id: chatId,
+                message_id:
+                  msg.message_id
+              }
+            );
+
+          } catch {}
+        }, 3000);
+
+        const limit = 10;
+
+        const totalResults =
+          await db.history.countDocuments({
+            file_name: {
+              $regex: keyword,
+              $options: "i"
+            }
+          });
+
+        const totalPages =
+          Math.max(
+            1,
+            Math.ceil(
+              totalResults / limit
+            )
+          );
+
+        const results =
+          await db.history.find({
+            file_name: {
+              $regex: keyword,
+              $options: "i"
+            }
+          })
+          .sort({
+            timestamp: -1
+          })
+          .limit(limit)
+          .toArray();
+
+        if (!results.length) {
+
+          await sendMessage(
+            chatId,
+            "❌ No history found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        let resultText =
+          `🔎 History Search: ${keyword}\n\n`;
+
+        results.forEach((item) => {
+
+          resultText +=
+`${item.action.toUpperCase()} • ${item.file_name}
+${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
+
+`;
+        });
+
+        const buttons = [];
+
+        buttons.push([
+          {
+            text: "❮",
+            callback_data: "noop"
+          },
+          {
+            text:
+              `1/${totalPages}`,
+            callback_data: "noop"
+          },
+          {
+            text: "❯",
+            callback_data:
+              totalPages > 1
+                ? `allsearch_${keyword}_2`
+                : "noop"
+          }
+        ]);
+
+        buttons.push([
+          {
+            text: " 🔎 Search Again ",
+            callback_data:
+              "search_history"
+          }
+        ]);
+
+        buttons.push([
+          {
+            text: " 🔒 Close ",
+            callback_data:
+              "close_search"
+          }
+        ]);
+
+        await sendMessage(
+          chatId,
+          resultText,
+          {
+            inline_keyboard:
+              buttons
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
       if (command.startsWith("/upload")) {
 
         if (String(chatId) !== String(ADMIN_ID)) {
@@ -1323,6 +1474,58 @@ ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
       }
 
 
+      if (
+        query.data ===
+        "search_history"
+      ) {
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`🔎 History Search Console
+
+Use:
+/allsearch keyword
+
+Example:
+/allsearch bleach`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      " Tap me → /allsearch ",
+                    switch_inline_query_current_chat:
+                      "/allsearch "
+                  }
+                ],
+
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data:
+                      "back_admin_panel"
+                  },
+                  {
+                    text: " 🔒 Close ",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
 if (query.data === "admin_broadcast") {
 
         broadcastMode[query.message.chat.id] = false;
@@ -1705,6 +1908,147 @@ if (query.data === "admin_back") {
             }
           }
         );
+      }
+
+
+      if (
+        query.data.startsWith(
+          "allsearch_"
+        )
+      ) {
+
+        const parts =
+          query.data.split("_");
+
+        const keyword =
+          parts[1];
+
+        const page =
+          Number(parts[2]);
+
+        const limit = 10;
+
+        const skip =
+          (page - 1) * limit;
+
+        const totalResults =
+          await db.history.countDocuments({
+            file_name: {
+              $regex: keyword,
+              $options: "i"
+            }
+          });
+
+        const totalPages =
+          Math.max(
+            1,
+            Math.ceil(
+              totalResults / limit
+            )
+          );
+
+        const results =
+          await db.history.find({
+            file_name: {
+              $regex: keyword,
+              $options: "i"
+            }
+          })
+          .sort({
+            timestamp: -1
+          })
+          .skip(skip)
+          .limit(limit)
+          .toArray();
+
+        let resultText =
+          `🔎 History Search: ${keyword}\n\n`;
+
+        results.forEach((item) => {
+
+          resultText +=
+`${item.action.toUpperCase()} • ${item.file_name}
+${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
+
+`;
+        });
+
+        const buttons = [];
+
+        buttons.push([
+          {
+            text:
+              page > 1
+                ? "❮"
+                : "•",
+
+            callback_data:
+              page > 1
+                ? `allsearch_${keyword}_${page - 1}`
+                : "noop"
+          },
+
+          {
+            text:
+              `${page}/${totalPages}`,
+
+            callback_data:
+              "noop"
+          },
+
+          {
+            text:
+              page < totalPages
+                ? "❯"
+                : "•",
+
+            callback_data:
+              page < totalPages
+                ? `allsearch_${keyword}_${page + 1}`
+                : "noop"
+          }
+        ]);
+
+        buttons.push([
+          {
+            text:
+              " 🔎 Search Again ",
+
+            callback_data:
+              "search_history"
+          }
+        ]);
+
+        buttons.push([
+          {
+            text:
+              " 🔒 Close ",
+
+            callback_data:
+              "close_search"
+          }
+        ]);
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+
+            message_id:
+              query.message.message_id,
+
+            text:
+              resultText,
+
+            reply_markup: {
+              inline_keyboard:
+                buttons
+            }
+          }
+        );
+
+        return res.sendStatus(200);
       }
 
 
