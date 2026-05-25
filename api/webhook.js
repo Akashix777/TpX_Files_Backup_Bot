@@ -1376,6 +1376,18 @@ if (query.data === "admin_back") {
                 ],
                 [
                   {
+                    text: "🔨 Ban User",
+                    callback_data: "ban_user"
+                  }
+                ],
+                [
+                  {
+                    text: "🚫 Banned Users",
+                    callback_data: "banned_users"
+                  }
+                ],
+                [
+                  {
                     text: "🔒 Close",
                     callback_data: "close_search"
                   }
