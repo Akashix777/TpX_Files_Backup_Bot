@@ -395,6 +395,12 @@ I'm TpX Bot.`;
               ],
               [
                 {
+                  text: "📊 User Stats",
+                  callback_data: "user_stats"
+                }
+              ],
+              [
+                {
                   text: "🔒 Close",
                   callback_data: "close_search"
                 }
@@ -518,7 +524,51 @@ if (command.startsWith("/list")) {
 
       
 
-      if (query.data === "admin_broadcast") {
+      
+
+      if (query.data === "user_stats") {
+
+        const totalUsers =
+          await db.users.countDocuments();
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text:
+`📊 User Statistics
+
+👥 Total Users: ${totalUsers}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      `👥 Total Users (${totalUsers})`,
+                    callback_data: "total_users"
+                  }
+                ],
+                [
+                  {
+                    text: "⬅ Back",
+                    callback_data: "back_admin_panel"
+                  },
+                  {
+                    text: "🔒 Close",
+                    callback_data: "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+if (query.data === "admin_broadcast") {
 
         broadcastMode[query.message.chat.id] = false;
 
