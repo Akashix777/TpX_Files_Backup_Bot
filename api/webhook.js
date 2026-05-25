@@ -484,7 +484,7 @@ I'm TpX Bot.`;
           } catch {}
         }, 3000);
 
-        const limit = 10;
+        const limit = 5;
 
         const totalResults =
           await db.history.countDocuments({
@@ -526,11 +526,16 @@ I'm TpX Bot.`;
         }
 
         let resultText =
-          `🔎 History Search: ${keyword}`;
+          `🔎 History Search: ${keyword}\n\n`;
 
         const buttons = [];
 
         results.forEach((item) => {
+
+          resultText +=
+`${item.action.toUpperCase()} • ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
+
+`;
 
           buttons.push([
             {
@@ -541,6 +546,8 @@ I'm TpX Bot.`;
                 `historyfile_${item._id}`
             }
           ]);
+
+          resultText += `\n`;
         });
 
         buttons.push([
@@ -1676,15 +1683,6 @@ Example:
 /allsearch bleach`,
             reply_markup: {
               inline_keyboard: [
-                [
-                  {
-                    text:
-                      " Tap me → /allsearch ",
-                    switch_inline_query_current_chat:
-                      "/allsearch "
-                  }
-                ],
-
                 [
                   {
                     text: "⬅ Back",
