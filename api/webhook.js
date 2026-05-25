@@ -540,8 +540,8 @@ I'm TpX Bot.`;
           buttons.push([
             {
               text:
-`${icon} ${item.file_name.slice(0, 45)}
-${item.action.toUpperCase()} • ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}`,
+`${icon} ${item.action.toUpperCase()} • ${item.media_type}
+${item.file_name.slice(0, 55)}`,
 
               callback_data:
                 `historyfile_${item._id}`
