@@ -25,6 +25,8 @@ const banMode = {};
 
 const pendingBanId = {};
 
+const historySearchMode = {};
+
 
 
 async function getDB() {
@@ -464,8 +466,12 @@ I'm TpX Bot.`;
             inline_keyboard: [
               [
                 {
-                  text: " Upload ",
+                  text: "🗃️ Upload",
                   callback_data: "admin_upload"
+                },
+                {
+                  text: "I",
+                  callback_data: "noop"
                 }
               ],
 
@@ -473,32 +479,54 @@ I'm TpX Bot.`;
                 {
                   text: "📢 Broadcast",
                   callback_data: "admin_broadcast"
+                },
+                {
+                  text: "II",
+                  callback_data: "noop"
                 }
               ],
+
               [
                 {
                   text: "📊 User Stats",
                   callback_data: "user_stats"
+                },
+                {
+                  text: "III",
+                  callback_data: "noop"
                 }
               ],
+
               [
                 {
                   text: "🔨 Ban User",
                   callback_data: "ban_user"
+                },
+                {
+                  text: "IV",
+                  callback_data: "noop"
                 }
               ],
+
               [
                 {
                   text: "🚫 Banned Users",
                   callback_data: "banned_users"
+                },
+                {
+                  text: "🔎 Search History",
+                  callback_data: "search_history"
                 }
               ],
+
               [
                 {
-                  text: "🕘 Upload/Delete History",
+                  text:
+                    "🕘 View Upload/Delete History",
                   callback_data: "upload_history"
                 }
               ],
+
               [
                 {
                   text: "🔒 Close",
@@ -1505,8 +1533,12 @@ if (query.data === "admin_back") {
               inline_keyboard: [
                 [
                   {
-                    text: " Upload ",
+                    text: "🗃️ Upload",
                     callback_data: "admin_upload"
+                  },
+                  {
+                    text: "I",
+                    callback_data: "noop"
                   }
                 ],
 
@@ -1514,32 +1546,54 @@ if (query.data === "admin_back") {
                   {
                     text: "📢 Broadcast",
                     callback_data: "admin_broadcast"
+                  },
+                  {
+                    text: "II",
+                    callback_data: "noop"
                   }
                 ],
+
                 [
                   {
                     text: "📊 User Stats",
                     callback_data: "user_stats"
+                  },
+                  {
+                    text: "III",
+                    callback_data: "noop"
                   }
                 ],
+
                 [
                   {
                     text: "🔨 Ban User",
                     callback_data: "ban_user"
+                  },
+                  {
+                    text: "IV",
+                    callback_data: "noop"
                   }
                 ],
+
                 [
                   {
                     text: "🚫 Banned Users",
                     callback_data: "banned_users"
+                  },
+                  {
+                    text: "🔎 Search History",
+                    callback_data: "search_history"
                   }
                 ],
+
                 [
                   {
-                    text: "🕘 Upload/Delete History",
+                    text:
+                      "🕘 View Upload/Delete History",
                     callback_data: "upload_history"
                   }
                 ],
+
                 [
                   {
                     text: "🔒 Close",
