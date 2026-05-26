@@ -37,7 +37,8 @@ async function getDB() {
     notes: client.db("telegramBot").collection("notes"),
     users: client.db("telegramBot").collection("users"),
     history: client.db("telegramBot").collection("history"),
-    searches: client.db("telegramBot").collection("searches")
+    searches: client.db("telegramBot").collection("searches"),
+    counters: client.db("telegramBot").collection("counters")
   };
 }
 
@@ -198,6 +199,91 @@ app.post("/webhook", async (req, res) => {
         }
 
         if (file) {
+
+          const genericNames = [
+            "Unnamed Video",
+            "GIF",
+            "Sticker",
+            "Voice Message"
+          ];
+
+          if (
+            genericNames.includes(
+              file.file_name
+            )
+          ) {
+
+            let counterType = null;
+            let extension = "";
+
+            if (
+              file.media_type === "video"
+            ) {
+
+              counterType = "video";
+
+              extension =
+                msg.video?.file_name
+                  ?.split(".")
+                  .pop();
+
+              extension =
+                extension
+                  ? `.${extension}`
+                  : ".mp4";
+            }
+
+            else if (
+              file.media_type === "animation"
+            ) {
+
+              counterType = "gif";
+              extension = ".gif";
+            }
+
+            else if (
+              file.media_type === "sticker"
+            ) {
+
+              counterType = "sticker";
+              extension = ".webp";
+            }
+
+            else if (
+              file.media_type === "voice"
+            ) {
+
+              counterType = "voice";
+              extension = ".ogg";
+            }
+
+            if (counterType) {
+
+              const counter =
+                await db.counters.findOneAndUpdate(
+                  {
+                    type: counterType
+                  },
+                  {
+                    $inc: {
+                      current: 1
+                    }
+                  },
+                  {
+                    upsert: true,
+                    returnDocument: "after"
+                  }
+                );
+
+              const number =
+                String(
+                  counter.current
+                ).padStart(2, "0");
+
+              file.file_name =
+`${counterType.toUpperCase()} . ${number}${extension}`;
+            }
+          }
 
           await db.files.insertOne({
             file_id: file.file_id,
