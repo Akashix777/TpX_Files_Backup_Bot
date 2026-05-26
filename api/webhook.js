@@ -1557,7 +1557,7 @@ User ID: ${targetId}`,
           );
         }
 
-        const limit = 10;
+        const limit = 5;
 
         const totalHistory =
           await db.history
@@ -2139,18 +2139,27 @@ if (query.data === "admin_back") {
           .toArray();
 
         let resultText =
-          `🔎 History Search: ${keyword}\n\n`;
+          `🔎 History Search: ${keyword}ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ`;
+
+        const buttons = [];
 
         results.forEach((item) => {
 
-          resultText +=
-`${item.action.toUpperCase()} • ${item.file_name}
-${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
+          const icon =
+            item.action === "delete"
+              ? "🗑️"
+              : "📤";
 
-`;
+          buttons.push([
+            {
+              text:
+`${icon} ${item.file_name.slice(0, 55)} ${item.action.toUpperCase()} • ${item.media_type}`,
+
+              callback_data:
+                `historyfile_${item._id}`
+            }
+          ]);
         });
-
-        const buttons = [];
 
         buttons.push([
           {
@@ -2183,16 +2192,6 @@ ${item.media_type} • ${new Date(item.timestamp).toLocaleString()}
               page < totalPages
                 ? `allsearch_${keyword}_${page + 1}`
                 : "noop"
-          }
-        ]);
-
-        buttons.push([
-          {
-            text:
-              " 🔎 Search Again ",
-
-            callback_data:
-              "search_history"
           }
         ]);
 
