@@ -2103,7 +2103,7 @@ if (query.data === "admin_back") {
         const page =
           Number(parts[2]);
 
-        const limit = 10;
+        const limit = 5;
 
         const skip =
           (page - 1) * limit;
