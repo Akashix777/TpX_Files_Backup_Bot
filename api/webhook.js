@@ -2223,10 +2223,84 @@ if (query.data === "admin_back") {
               ? "🗑️"
               : "📤";
 
+          const lower =
+            (item.file_name || "")
+              .toLowerCase();
+
+          let mediaEmoji = "📂";
+
+          if (
+            [
+              ".mp3",
+              ".m4a",
+              ".flac",
+              ".wav",
+              ".aac",
+              ".ogg",
+              ".opus",
+              ".alac",
+              ".wma",
+              ".aiff"
+            ].some(ext =>
+              lower.endsWith(ext)
+            )
+          ) {
+
+            mediaEmoji = "🎵";
+          }
+
+          else if (
+            item.media_type === "voice"
+          ) {
+
+            mediaEmoji = "🔊";
+          }
+
+          else if (
+            [
+              ".mp4",
+              ".mkv",
+              ".avi",
+              ".mov",
+              ".webm",
+              ".flv",
+              ".wmv",
+              ".m4v",
+              ".3gp",
+              ".ts"
+            ].some(ext =>
+              lower.endsWith(ext)
+            )
+          ) {
+
+            mediaEmoji = "🎬";
+          }
+
+          else if (
+            item.media_type === "sticker"
+          ) {
+
+            mediaEmoji = "🎭";
+          }
+
+          else if (
+            lower.endsWith(".gif")
+            ||
+            item.media_type === "animation"
+          ) {
+
+            mediaEmoji = "👾";
+          }
+
+          const shortAction =
+            item.action === "delete"
+              ? "DLT"
+              : "UP";
+
           buttons.push([
             {
               text:
-`${icon} ${item.file_name.slice(0, 55)} ${item.action.toUpperCase()} • ${item.media_type}`,
+`${icon} ${shortAction} ${mediaEmoji} • ${item.file_name.slice(0, 55)}`,
 
               callback_data:
                 `historyfile_${item._id}`
