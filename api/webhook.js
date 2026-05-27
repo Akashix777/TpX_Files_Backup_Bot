@@ -363,7 +363,7 @@ app.post("/webhook", async (req, res) => {
 
           await sendMessage(
             chatId,
-            "❌ Invalid Chat ID."
+            "❌ Invalid Chat ID.\n\nThis message will auto delete in 45 seconds."
           );
 
           return res.sendStatus(200);
@@ -445,7 +445,27 @@ I'm TpX Bot.`;
         const keyword = text.split(" ").slice(1).join(" ").trim();
 
         if (!keyword) {
-          await sendMessage(chatId, "Usage: /search keyword");
+          const sent = await sendMessage(
+            chatId,
+            "Usage: /search keyword"
+          );
+
+          setTimeout(async () => {
+
+            try {
+
+              await axios.post(
+                `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+                {
+                  chat_id: chatId,
+                  message_id:
+                    sent.message_id
+                }
+              );
+
+            } catch {}
+
+          }, 45000);
           return res.sendStatus(200);
         }
 
@@ -467,7 +487,27 @@ I'm TpX Bot.`;
         }).limit(8).toArray();
 
         if (!results.length) {
-          await sendMessage(chatId, "❌ No files found.");
+          const sent = await sendMessage(
+            chatId,
+            "❌ No files found."
+          );
+
+          setTimeout(async () => {
+
+            try {
+
+              await axios.post(
+                `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+                {
+                  chat_id: chatId,
+                  message_id:
+                    sent.message_id
+                }
+              );
+
+            } catch {}
+
+          }, 45000);
           return res.sendStatus(200);
         }
 
@@ -546,10 +586,27 @@ I'm TpX Bot.`;
 
         if (!keyword) {
 
-          await sendMessage(
+          const sent = await sendMessage(
             chatId,
             "Usage: /allsearch keyword"
           );
+
+          setTimeout(async () => {
+
+            try {
+
+              await axios.post(
+                `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+                {
+                  chat_id: chatId,
+                  message_id:
+                    sent.message_id
+                }
+              );
+
+            } catch {}
+
+          }, 45000);
 
           return res.sendStatus(200);
         }
@@ -568,7 +625,7 @@ I'm TpX Bot.`;
             );
 
           } catch {}
-        }, 3000);
+        }, 45000);
 
         const limit = 5;
 
@@ -603,10 +660,27 @@ I'm TpX Bot.`;
 
         if (!results.length) {
 
-          await sendMessage(
+          const sent = await sendMessage(
             chatId,
             "❌ No history found."
           );
+
+          setTimeout(async () => {
+
+            try {
+
+              await axios.post(
+                `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+                {
+                  chat_id: chatId,
+                  message_id:
+                    sent.message_id
+                }
+              );
+
+            } catch {}
+
+          }, 45000);
 
           return res.sendStatus(200);
         }
@@ -910,7 +984,7 @@ if (command.startsWith("/list")) {
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: "Upload",
+            text: "Uploadㅤㅤㅤㅤㅤㅤㅤㅤ",
             reply_markup: {
               inline_keyboard: [
                 [
@@ -2230,7 +2304,7 @@ if (query.data === "admin_back") {
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: `🔎 ${keyword}`,
+            text: `🔎 ${keyword}ㅤㅤㅤㅤㅤㅤㅤㅤㅤ`,
             reply_markup: {
               inline_keyboard: [
                 ...buttons,
