@@ -459,7 +459,7 @@ I'm TpX Bot.`;
                 {
                   chat_id: chatId,
                   message_id:
-                    sent.message_id
+                    sent.data.result.message_id
                 }
               );
 
@@ -501,7 +501,7 @@ I'm TpX Bot.`;
                 {
                   chat_id: chatId,
                   message_id:
-                    sent.message_id
+                    sent.data.result.message_id
                 }
               );
 
@@ -554,7 +554,7 @@ I'm TpX Bot.`;
 
         await sendMessage(
           chatId,
-          `🔎 ${keyword}`,
+          `🔎 ${keyword}ㅤㅤㅤㅤㅤㅤㅤㅤ`,
           {
             inline_keyboard: buttons
           }
@@ -600,7 +600,7 @@ I'm TpX Bot.`;
                 {
                   chat_id: chatId,
                   message_id:
-                    sent.message_id
+                    sent.data.result.message_id
                 }
               );
 
@@ -674,7 +674,7 @@ I'm TpX Bot.`;
                 {
                   chat_id: chatId,
                   message_id:
-                    sent.message_id
+                    sent.data.result.message_id
                 }
               );
 
