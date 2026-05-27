@@ -363,7 +363,7 @@ app.post("/webhook", async (req, res) => {
 
           await sendMessage(
             chatId,
-            "❌ Invalid Chat ID.\n\nThis message will auto delete in 45 seconds."
+            "❌ Invalid Chat ID."
           );
 
           return res.sendStatus(200);
