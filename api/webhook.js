@@ -361,10 +361,27 @@ app.post("/webhook", async (req, res) => {
 
           banMode[chatId] = false;
 
-          await sendMessage(
+          const sent = await sendMessage(
             chatId,
             "❌ Invalid Chat ID."
           );
+
+          setTimeout(async () => {
+
+            try {
+
+              await axios.post(
+                `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+                {
+                  chat_id: chatId,
+                  message_id:
+                    sent.data.result.message_id
+                }
+              );
+
+            } catch {}
+
+          }, 45000);
 
           return res.sendStatus(200);
         }
