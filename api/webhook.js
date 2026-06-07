@@ -65,6 +65,50 @@ async function sendMessage(chatId, text, keyboard = null) {
 }
 
 async function sendPhoto(chatId, photo, caption, keyboard = null) {
+
+async function getNextNodeId(db) {
+  const result =
+    await db.counters.findOneAndUpdate(
+      { _id: "nodes" },
+      { $inc: { value: 1 } },
+      {
+        upsert: true,
+        returnDocument: "after"
+      }
+    );
+
+  return "N" + String(
+    result.value.value
+  ).padStart(4, "0");
+}
+
+async function ensureRootNode(db) {
+
+  const existing =
+    await db.nodes.findOne({
+      public_id: "ROOT"
+    });
+
+  if (existing) {
+    return;
+  }
+
+  await db.nodes.insertOne({
+    public_id: "ROOT",
+    name: "ROOT",
+    parent_id: null,
+    position: 0,
+    description: "",
+    poster_file_id: null,
+    custom_sort_character: null,
+    is_trashed: false,
+    created_at: new Date(),
+    updated_at: new Date()
+  });
+
+  console.log("ROOT node created");
+}
+
   const payload = {
     chat_id: chatId,
     photo,
@@ -2786,6 +2830,8 @@ if (query.data === "admin_back") {
 
 async function initializeDatabase() {
   const db = await getDB();
+
+  await ensureRootNode(db);
 
   await db.nodes.createIndex(
     { public_id: 1 },
