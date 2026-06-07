@@ -2199,6 +2199,32 @@ if (query.data === "admin_broadcast") {
       }
 
 
+if (query.data === "bankai_library") {
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text: "⛩️ Bankai · Library\n\nROOT",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "❌ CLOSE",
+                    callback_data: "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
 if (query.data === "admin_back") {
 
         return res.sendStatus(200);
