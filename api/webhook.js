@@ -2242,9 +2242,9 @@ if (query.data === "admin_broadcast") {
 
       if (query.data === "stop_upload_button") {
 
-        uploadMode[query.message.chat.id] = false;
-        uploadType[query.message.chat.id] = null;
-        broadcastMode[query.message.chat.id] = false;
+        clearAdminStates(
+          query.message.chat.id
+        );
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
