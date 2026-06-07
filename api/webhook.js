@@ -2470,6 +2470,13 @@ if (query.data === "admin_back") {
               inline_keyboard: [
                 [
                   {
+                    text: " ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ ",
+                    callback_data: "bankai_library"
+                  }
+                ],
+
+                [
+                  {
                     text: " 🗃️ Upload ",
                     callback_data: "admin_upload"
                   },
