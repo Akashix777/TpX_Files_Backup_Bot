@@ -29,6 +29,21 @@ const historySearchMode = {};
 
 const adminState = {};
 
+function clearAdminStates(chatId) {
+
+  uploadMode[chatId] = false;
+  uploadType[chatId] = null;
+
+  broadcastMode[chatId] = false;
+
+  banMode[chatId] = false;
+  pendingBanId[chatId] = null;
+
+  historySearchMode[chatId] = false;
+
+  delete adminState[chatId];
+}
+
 
 
 async function getDB() {
@@ -1091,9 +1106,9 @@ if (command.startsWith("/list")) {
 
       if (query.data === "close_search") {
 
-        uploadMode[query.message.chat.id] = false;
-        uploadType[query.message.chat.id] = null;
-        broadcastMode[query.message.chat.id] = false;
+        clearAdminStates(
+          query.message.chat.id
+        );
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
@@ -1109,9 +1124,9 @@ if (command.startsWith("/list")) {
       
       if (query.data === "admin_upload") {
 
-        uploadMode[query.message.chat.id] = false;
-        uploadType[query.message.chat.id] = null;
-        broadcastMode[query.message.chat.id] = false;
+        clearAdminStates(
+          query.message.chat.id
+        );
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
