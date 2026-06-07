@@ -2260,27 +2260,46 @@ if (query.data === "admin_broadcast") {
 
 if (query.data === "bankai_library") {
 
+        const children =
+          await db.nodes.find({
+            parent_id: "ROOT",
+            is_trashed: false
+          }).sort({
+            position: 1,
+            name: 1
+          }).toArray();
+
+        const buttons = children.map(
+          node => [{
+            text: node.name,
+            callback_data:
+              `lib_open_${node.public_id}`
+          }]
+        );
+
+        buttons.push([
+          {
+            text: "➕ Create Child Node",
+            callback_data: "admin_create_ROOT"
+          }
+        ]);
+
+        buttons.push([
+          {
+            text: "❌ CLOSE",
+            callback_data: "close_search"
+          }
+        ]);
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+            text:
+              "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
             reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: "➕ Create Child Node",
-                    callback_data: "admin_create_ROOT"
-                  }
-                ],
-                [
-                  {
-                    text: "❌ CLOSE",
-                    callback_data: "close_search"
-                  }
-                ]
-              ]
+              inline_keyboard: buttons
             }
           }
         );
