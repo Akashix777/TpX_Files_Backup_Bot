@@ -881,7 +881,7 @@ I'm TpX Bot.`;
 
         await sendMessage(
           chatId,
-          "Admin Panel",
+          "⚙️ Admin Panel",
           {
             inline_keyboard: [
               [
@@ -2163,7 +2163,7 @@ if (query.data === "admin_back") {
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: "Admin Panel",
+            text: "⚙️ Admin Panel",
             reply_markup: {
               inline_keyboard: [
                 [
