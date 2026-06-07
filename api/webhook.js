@@ -2471,9 +2471,9 @@ if (query.data === "admin_back") {
       
       if (query.data === "back_admin_panel") {
 
-        uploadMode[query.message.chat.id] = false;
-        uploadType[query.message.chat.id] = null;
-        broadcastMode[query.message.chat.id] = false;
+        clearAdminStates(
+          query.message.chat.id
+        );
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
