@@ -2206,7 +2206,7 @@ if (query.data === "bankai_library") {
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOT",
+            text: "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
             reply_markup: {
               inline_keyboard: [
                 [
