@@ -932,6 +932,13 @@ I'm TpX Bot.`;
             inline_keyboard: [
               [
                 {
+                  text: " ⛩️ Bankai · Library ",
+                  callback_data: "bankai_library"
+                }
+              ],
+
+              [
+                {
                   text: " 🗃️ Upload ",
                   callback_data: "admin_upload"
                 },
