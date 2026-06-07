@@ -27,6 +27,8 @@ const pendingBanId = {};
 
 const historySearchMode = {};
 
+const adminState = {};
+
 
 
 async function getDB() {
@@ -143,6 +145,63 @@ app.post("/webhook", async (req, res) => {
       const chatId = msg.chat.id;
       const text = msg.text || "";
       const command = text.toLowerCase();
+
+      const state = adminState[chatId];
+
+      if (
+        state &&
+        state.action === "create_node"
+      ) {
+
+        if (
+          Date.now() - state.createdAt >
+          180000
+        ) {
+
+          delete adminState[chatId];
+
+          await sendMessage(
+            chatId,
+            "❌ Action timed out."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const nodeName = text.trim();
+
+        if (!nodeName) {
+          return res.sendStatus(200);
+        }
+
+        const publicId =
+          await getNextNodeId(db);
+
+        await db.nodes.insertOne({
+          public_id: publicId,
+          name: nodeName,
+          parent_id:
+            state.parentNodeId,
+          position: 0,
+          description: "",
+          poster_file_id: null,
+          custom_sort_character: null,
+          is_trashed: false,
+          created_at: new Date(),
+          updated_at: new Date()
+        });
+
+        delete adminState[chatId];
+
+        await sendMessage(
+          chatId,
+          `✅ Node Created\n\n${nodeName}\n(${publicId})`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
 
       const existingUser =
         await db.users.findOne({
@@ -2211,6 +2270,12 @@ if (query.data === "bankai_library") {
               inline_keyboard: [
                 [
                   {
+                    text: "➕ Create Child Node",
+                    callback_data: "admin_create_ROOT"
+                  }
+                ],
+                [
+                  {
                     text: "❌ CLOSE",
                     callback_data: "close_search"
                   }
@@ -2223,6 +2288,39 @@ if (query.data === "bankai_library") {
         return res.sendStatus(200);
       }
 
+
+
+
+if (query.data === "admin_create_ROOT") {
+
+        adminState[query.message.chat.id] = {
+          action: "create_node",
+          parentNodeId: "ROOT",
+          createdAt: Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            text:
+              "Enter node name:\n\nExample:\n⛩️ Anime",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "❌ Cancel",
+                    callback_data: "bankai_library"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
 
 
 if (query.data === "admin_back") {
