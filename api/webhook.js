@@ -98,7 +98,7 @@ async function getNextNodeId(db) {
     );
 
   return "N" + String(
-    result.value.value
+    result.value
   ).padStart(4, "0");
 }
 
