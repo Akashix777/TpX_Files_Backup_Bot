@@ -2260,6 +2260,10 @@ if (query.data === "admin_broadcast") {
 
 if (query.data === "bankai_library") {
 
+        delete adminState[
+          query.message.chat.id
+        ];
+
         const children =
           await db.nodes.find({
             parent_id: "ROOT",
