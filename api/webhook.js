@@ -932,7 +932,7 @@ I'm TpX Bot.`;
             inline_keyboard: [
               [
                 {
-                  text: " ⛩️ Bankai · Library ",
+                  text: " ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ ",
                   callback_data: "bankai_library"
                 }
               ],
@@ -2206,7 +2206,7 @@ if (query.data === "bankai_library") {
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: "⛩️ Bankai · Library\n\nROOT",
+            text: "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOT",
             reply_markup: {
               inline_keyboard: [
                 [
