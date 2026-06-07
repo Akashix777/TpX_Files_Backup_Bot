@@ -65,6 +65,24 @@ async function sendMessage(chatId, text, keyboard = null) {
 }
 
 async function sendPhoto(chatId, photo, caption, keyboard = null) {
+  const payload = {
+    chat_id: chatId,
+    photo,
+    caption,
+    parse_mode: "HTML"
+  };
+
+  if (keyboard) {
+    payload.reply_markup = keyboard;
+  }
+
+  return axios.post(
+    `https://api.telegram.org/bot${TOKEN}/sendPhoto`,
+    payload
+  );
+}
+
+
 
 async function getNextNodeId(db) {
   const result =
@@ -109,22 +127,6 @@ async function ensureRootNode(db) {
   console.log("ROOT node created");
 }
 
-  const payload = {
-    chat_id: chatId,
-    photo,
-    caption,
-    parse_mode: "HTML"
-  };
-
-  if (keyboard) {
-    payload.reply_markup = keyboard;
-  }
-
-  return axios.post(
-    `https://api.telegram.org/bot${TOKEN}/sendPhoto`,
-    payload
-  );
-}
 
 app.get("/", (req, res) => {
   res.send("Bot is alive");
