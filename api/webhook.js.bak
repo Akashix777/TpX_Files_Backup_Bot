@@ -38,12 +38,7 @@ async function getDB() {
     users: client.db("telegramBot").collection("users"),
     history: client.db("telegramBot").collection("history"),
     searches: client.db("telegramBot").collection("searches"),
-    counters: client.db("telegramBot").collection("counters"),
-
-    nodes: client.db("telegramBot").collection("nodes"),
-    attachments: client.db("telegramBot").collection("attachments"),
-    share_links: client.db("telegramBot").collection("share_links"),
-    settings: client.db("telegramBot").collection("settings")
+    counters: client.db("telegramBot").collection("counters")
   };
 }
 
@@ -2783,48 +2778,6 @@ if (query.data === "admin_back") {
   }
 });
 
-
-async function initializeDatabase() {
-  const db = await getDB();
-
-  await db.nodes.createIndex(
-    { public_id: 1 },
-    { unique: true }
-  );
-
-  await db.nodes.createIndex({
-    parent_id: 1
-  });
-
-  await db.nodes.createIndex({
-    name: 1
-  });
-
-  await db.nodes.createIndex({
-    is_trashed: 1
-  });
-
-  await db.attachments.createIndex({
-    node_id: 1
-  });
-
-  await db.share_links.createIndex(
-    { token: 1 },
-    { unique: true }
-  );
-
-  await db.users.createIndex({
-    chat_id: 1
-  });
-}
-
-initializeDatabase()
-  .then(() => {
-    console.log("DB Ready");
-  })
-  .catch(console.error);
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
