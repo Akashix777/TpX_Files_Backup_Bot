@@ -2310,19 +2310,33 @@ if (query.data === "bankai_library") {
 
 
 
-if (query.data === "admin_create_ROOT") {
+if (
+        query.data.startsWith(
+          "admin_create_"
+        )
+      ) {
 
-        adminState[query.message.chat.id] = {
+        const parentNodeId =
+          query.data.replace(
+            "admin_create_",
+            ""
+          );
+
+        adminState[
+          query.message.chat.id
+        ] = {
           action: "create_node",
-          parentNodeId: "ROOT",
+          parentNodeId,
           createdAt: Date.now()
         };
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
-            chat_id: query.message.chat.id,
-            message_id: query.message.message_id,
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
             text:
               "Enter node name:\n\nExample:\n⛩️ Anime",
             reply_markup: {
@@ -2330,7 +2344,8 @@ if (query.data === "admin_create_ROOT") {
                 [
                   {
                     text: "❌ Cancel",
-                    callback_data: "bankai_library"
+                    callback_data:
+                      "bankai_library"
                   }
                 ]
               ]
