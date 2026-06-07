@@ -2342,6 +2342,93 @@ if (query.data === "admin_create_ROOT") {
       }
 
 
+
+if (query.data.startsWith("lib_open_")) {
+
+        const publicId =
+          query.data.replace(
+            "lib_open_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId,
+            is_trashed: false
+          });
+
+        if (!node) {
+
+          await axios.post(
+            `https://api.telegram.org/bot${TOKEN}/answerCallbackQuery`,
+            {
+              callback_query_id:
+                query.id,
+              text: "Node not found"
+            }
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const children =
+          await db.nodes.find({
+            parent_id: node.public_id,
+            is_trashed: false
+          }).sort({
+            position: 1,
+            name: 1
+          }).toArray();
+
+        const buttons = children.map(
+          child => [{
+            text: child.name,
+            callback_data:
+              `lib_open_${child.public_id}`
+          }]
+        );
+
+        buttons.push([
+          {
+            text: "➕ Create Child Node",
+            callback_data:
+              `admin_create_${node.public_id}`
+          }
+        ]);
+
+        buttons.push([
+          {
+            text: "🏡 N-HOME",
+            callback_data:
+              "bankai_library"
+          },
+          {
+            text: "❌ CLOSE",
+            callback_data:
+              "close_search"
+          }
+        ]);
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+              `ROOT > ${node.name}`,
+            reply_markup: {
+              inline_keyboard:
+                buttons
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
 if (query.data === "admin_back") {
 
         return res.sendStatus(200);
