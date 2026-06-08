@@ -2432,6 +2432,11 @@ if (query.data.startsWith("lib_open_")) {
 
         buttons.push([
           {
+            text: "⬅ BACK",
+            callback_data:
+              `lib_back_${node.parent_id}`
+          },
+          {
             text: "🏡 N-HOME",
             callback_data:
               "bankai_library"
@@ -2460,6 +2465,27 @@ if (query.data.startsWith("lib_open_")) {
         );
 
         return res.sendStatus(200);
+      }
+
+
+
+if (query.data.startsWith("lib_back_")) {
+
+        const parentId =
+          query.data.replace(
+            "lib_back_",
+            ""
+          );
+
+        if (parentId === "ROOT") {
+
+          query.data = "bankai_library";
+
+        } else {
+
+          query.data =
+            `lib_open_${parentId}`;
+        }
       }
 
 
