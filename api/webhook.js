@@ -145,6 +145,137 @@ async function ensureRootNode(db) {
 }
 
 
+async function renderLibraryRoot(
+  db,
+  chatId,
+  messageId
+) {
+
+  const children =
+    await db.nodes.find({
+      parent_id: "ROOT",
+      is_trashed: false
+    }).sort({
+      position: 1,
+      name: 1
+    }).toArray();
+
+  const buttons = children.map(
+    node => [{
+      text: node.name,
+      callback_data:
+        `lib_open_${node.public_id}`
+    }]
+  );
+
+  buttons.push([
+    {
+      text: "➕ Create Child Node",
+      callback_data:
+        "admin_create_ROOT"
+    }
+  ]);
+
+  buttons.push([
+    {
+      text: "❌ CLOSE",
+      callback_data:
+        "close_search"
+    }
+  ]);
+
+  await axios.post(
+    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+    {
+      chat_id: chatId,
+      message_id: messageId,
+      text:
+        "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+      reply_markup: {
+        inline_keyboard:
+          buttons
+      }
+    }
+  );
+}
+
+
+async function renderLibraryNode(
+  db,
+  chatId,
+  messageId,
+  publicId
+) {
+
+  const node =
+    await db.nodes.findOne({
+      public_id: publicId,
+      is_trashed: false
+    });
+
+  if (!node) {
+    return;
+  }
+
+  const children =
+    await db.nodes.find({
+      parent_id: node.public_id,
+      is_trashed: false
+    }).sort({
+      position: 1,
+      name: 1
+    }).toArray();
+
+  const buttons = children.map(
+    child => [{
+      text: child.name,
+      callback_data:
+        `lib_open_${child.public_id}`
+    }]
+  );
+
+  buttons.push([
+    {
+      text: "➕ Create Child Node",
+      callback_data:
+        `admin_create_${node.public_id}`
+    }
+  ]);
+
+  buttons.push([
+    {
+      text: "⬅ BACK",
+      callback_data:
+        `lib_back_${node.parent_id}`
+    },
+    {
+      text: "🏡 N-HOME",
+      callback_data:
+        "bankai_library"
+    },
+    {
+      text: "❌ CLOSE",
+      callback_data:
+        "close_search"
+    }
+  ]);
+
+  await axios.post(
+    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+    {
+      chat_id: chatId,
+      message_id: messageId,
+      text:
+        `ROOT > ${node.name}`,
+      reply_markup: {
+        inline_keyboard:
+          buttons
+      }
+    }
+  );
+}
+
+
 app.get("/", (req, res) => {
   res.send("Bot is alive");
 });
@@ -2279,53 +2410,14 @@ if (query.data === "bankai_library") {
           query.message.chat.id
         ];
 
-        const children =
-          await db.nodes.find({
-            parent_id: "ROOT",
-            is_trashed: false
-          }).sort({
-            position: 1,
-            name: 1
-          }).toArray();
-
-        const buttons = children.map(
-          node => [{
-            text: node.name,
-            callback_data:
-              `lib_open_${node.public_id}`
-          }]
-        );
-
-        buttons.push([
-          {
-            text: "➕ Create Child Node",
-            callback_data: "admin_create_ROOT"
-          }
-        ]);
-
-        buttons.push([
-          {
-            text: "❌ CLOSE",
-            callback_data: "close_search"
-          }
-        ]);
-
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-          {
-            chat_id: query.message.chat.id,
-            message_id: query.message.message_id,
-            text:
-              "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
-            reply_markup: {
-              inline_keyboard: buttons
-            }
-          }
+        await renderLibraryRoot(
+          db,
+          query.message.chat.id,
+          query.message.message_id
         );
 
         return res.sendStatus(200);
       }
-
 
 
 
@@ -2385,88 +2477,15 @@ if (query.data.startsWith("lib_open_")) {
             ""
           );
 
-        const node =
-          await db.nodes.findOne({
-            public_id: publicId,
-            is_trashed: false
-          });
-
-        if (!node) {
-
-          await axios.post(
-            `https://api.telegram.org/bot${TOKEN}/answerCallbackQuery`,
-            {
-              callback_query_id:
-                query.id,
-              text: "Node not found"
-            }
-          );
-
-          return res.sendStatus(200);
-        }
-
-        const children =
-          await db.nodes.find({
-            parent_id: node.public_id,
-            is_trashed: false
-          }).sort({
-            position: 1,
-            name: 1
-          }).toArray();
-
-        const buttons = children.map(
-          child => [{
-            text: child.name,
-            callback_data:
-              `lib_open_${child.public_id}`
-          }]
-        );
-
-        buttons.push([
-          {
-            text: "➕ Create Child Node",
-            callback_data:
-              `admin_create_${node.public_id}`
-          }
-        ]);
-
-        buttons.push([
-          {
-            text: "⬅ BACK",
-            callback_data:
-              `lib_back_${node.parent_id}`
-          },
-          {
-            text: "🏡 N-HOME",
-            callback_data:
-              "bankai_library"
-          },
-          {
-            text: "❌ CLOSE",
-            callback_data:
-              "close_search"
-          }
-        ]);
-
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-          {
-            chat_id:
-              query.message.chat.id,
-            message_id:
-              query.message.message_id,
-            text:
-              `ROOT > ${node.name}`,
-            reply_markup: {
-              inline_keyboard:
-                buttons
-            }
-          }
+        await renderLibraryNode(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          publicId
         );
 
         return res.sendStatus(200);
       }
-
 
 
 
@@ -2480,61 +2499,25 @@ if (query.data.startsWith("lib_back_")) {
 
         if (parentId === "ROOT") {
 
-          const children =
-            await db.nodes.find({
-              parent_id: "ROOT",
-              is_trashed: false
-            }).sort({
-              position: 1,
-              name: 1
-            }).toArray();
-
-          const buttons = children.map(
-            node => [{
-              text: node.name,
-              callback_data:
-                `lib_open_${node.public_id}`
-            }]
+          await renderLibraryRoot(
+            db,
+            query.message.chat.id,
+            query.message.message_id
           );
 
-          buttons.push([
-            {
-              text: "➕ Create Child Node",
-              callback_data:
-                "admin_create_ROOT"
-            }
-          ]);
+        } else {
 
-          buttons.push([
-            {
-              text: "❌ CLOSE",
-              callback_data:
-                "close_search"
-            }
-          ]);
-
-          await axios.post(
-            `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-            {
-              chat_id:
-                query.message.chat.id,
-              message_id:
-                query.message.message_id,
-              text:
-                "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
-              reply_markup: {
-                inline_keyboard:
-                  buttons
-              }
-            }
+          await renderLibraryNode(
+            db,
+            query.message.chat.id,
+            query.message.message_id,
+            parentId
           );
-
-          return res.sendStatus(200);
         }
 
-        query.data =
-          `lib_open_${parentId}`;
+        return res.sendStatus(200);
       }
+
 
 
 if (query.data === "admin_back") {
