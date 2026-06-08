@@ -247,6 +247,14 @@ async function renderLibraryNode(
     }
   ]);
 
+  buttons.push([
+    {
+      text: "⚙ Node Actions",
+      callback_data:
+        `node_actions_${node.public_id}`
+    }
+  ]);
+
   if (
     node.parent_id === "ROOT"
   ) {
@@ -2540,6 +2548,69 @@ if (query.data.startsWith("lib_back_")) {
             parentId
           );
         }
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "node_actions_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "node_actions_",
+            ""
+          );
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+              "⚙ Node Actions",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "✏ Rename Node",
+                    callback_data:
+                      `rename_node_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "♻ Move To Trash",
+                    callback_data:
+                      `trash_node_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "⬅ Back",
+                    callback_data:
+                      `lib_open_${publicId}`
+                  },
+                  {
+                    text:
+                      "❌ CLOSE",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
 
         return res.sendStatus(200);
       }
