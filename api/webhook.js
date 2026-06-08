@@ -387,6 +387,78 @@ app.post("/webhook", async (req, res) => {
 
 
 
+      const nodeAction =
+        nodeActionState[chatId];
+
+      if (
+        nodeAction &&
+        nodeAction.action ===
+          "rename_node"
+      ) {
+
+        const newName =
+          text.trim();
+
+        if (!newName) {
+
+          return res.sendStatus(200);
+        }
+
+        const node =
+          await db.nodes.findOne({
+            public_id:
+              nodeAction.publicId,
+            is_trashed: false
+          });
+
+        if (!node) {
+
+          nodeActionState[
+            chatId
+          ] = null;
+
+          await sendMessage(
+            chatId,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await db.nodes.updateOne(
+          {
+            public_id:
+              nodeAction.publicId
+          },
+          {
+            $set: {
+              name: newName,
+              updated_at:
+                new Date()
+            }
+          }
+        );
+
+        nodeActionState[
+          chatId
+        ] = null;
+
+        await sendMessage(
+          chatId,
+`✅ Node Renamed
+
+Old:
+${node.name}
+
+New:
+${newName}`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
       const existingUser =
         await db.users.findOne({
           chat_id: chatId
