@@ -29,7 +29,11 @@ const historySearchMode = {};
 
 const adminState = {};
 
+const nodeActionState = {};
+
 function clearAdminStates(chatId) {
+
+  nodeActionState[chatId] = null;
 
   uploadMode[chatId] = false;
   uploadType[chatId] = null;
@@ -2605,6 +2609,55 @@ if (
                       "❌ CLOSE",
                     callback_data:
                       "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "rename_node_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "rename_node_",
+            ""
+          );
+
+        nodeActionState[
+          query.message.chat.id
+        ] = {
+          action: "rename_node",
+          publicId,
+          createdAt: Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+              "✏ Send new node name",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `node_actions_${publicId}`
                   }
                 ]
               ]
