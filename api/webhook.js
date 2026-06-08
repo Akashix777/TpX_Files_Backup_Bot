@@ -2469,6 +2469,7 @@ if (query.data.startsWith("lib_open_")) {
 
 
 
+
 if (query.data.startsWith("lib_back_")) {
 
         const parentId =
@@ -2479,13 +2480,60 @@ if (query.data.startsWith("lib_back_")) {
 
         if (parentId === "ROOT") {
 
-          query.data = "bankai_library";
+          const children =
+            await db.nodes.find({
+              parent_id: "ROOT",
+              is_trashed: false
+            }).sort({
+              position: 1,
+              name: 1
+            }).toArray();
 
-        } else {
+          const buttons = children.map(
+            node => [{
+              text: node.name,
+              callback_data:
+                `lib_open_${node.public_id}`
+            }]
+          );
 
-          query.data =
-            `lib_open_${parentId}`;
+          buttons.push([
+            {
+              text: "➕ Create Child Node",
+              callback_data:
+                "admin_create_ROOT"
+            }
+          ]);
+
+          buttons.push([
+            {
+              text: "❌ CLOSE",
+              callback_data:
+                "close_search"
+            }
+          ]);
+
+          await axios.post(
+            `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+            {
+              chat_id:
+                query.message.chat.id,
+              message_id:
+                query.message.message_id,
+              text:
+                "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+              reply_markup: {
+                inline_keyboard:
+                  buttons
+              }
+            }
+          );
+
+          return res.sendStatus(200);
         }
+
+        query.data =
+          `lib_open_${parentId}`;
       }
 
 
