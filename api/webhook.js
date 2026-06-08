@@ -178,6 +178,11 @@ async function renderLibraryRoot(
 
   buttons.push([
     {
+      text: "⬅ BACK",
+      callback_data:
+        "back_admin_panel"
+    },
+    {
       text: "❌ CLOSE",
       callback_data:
         "close_search"
@@ -242,23 +247,44 @@ async function renderLibraryNode(
     }
   ]);
 
-  buttons.push([
-    {
-      text: "⬅ BACK",
-      callback_data:
-        `lib_back_${node.parent_id}`
-    },
-    {
-      text: "🏡 N-HOME",
-      callback_data:
-        "bankai_library"
-    },
-    {
-      text: "❌ CLOSE",
-      callback_data:
-        "close_search"
-    }
-  ]);
+  if (
+    node.parent_id === "ROOT"
+  ) {
+
+    buttons.push([
+      {
+        text: "⬅ BACK",
+        callback_data:
+          `lib_back_${node.parent_id}`
+      },
+      {
+        text: "❌ CLOSE",
+        callback_data:
+          "close_search"
+      }
+    ]);
+
+  } else {
+
+    buttons.push([
+      {
+        text: "⬅ BACK",
+        callback_data:
+          `lib_back_${node.parent_id}`
+      },
+      {
+        text: "🏡 N-HOME",
+        callback_data:
+          "bankai_library"
+      },
+      {
+        text: "❌ CLOSE",
+        callback_data:
+          "close_search"
+      }
+    ]);
+
+  }
 
   await axios.post(
     `https://api.telegram.org/bot${TOKEN}/editMessageText`,
