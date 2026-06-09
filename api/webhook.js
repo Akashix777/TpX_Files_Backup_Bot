@@ -2847,6 +2847,14 @@ if (
                 [
                   {
                     text:
+                      "⬆⬇ Reorder Files",
+                    callback_data:
+                      `reorder_files_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
                       "✏ Rename Node",
                     callback_data:
                       `rename_node_${publicId}`
@@ -2919,6 +2927,13 @@ if (
           return res.sendStatus(200);
         }
 
+        const totalSiblings =
+          await db.nodes.countDocuments({
+            parent_id:
+              node.parent_id,
+            is_trashed: false
+          });
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
@@ -2933,7 +2948,7 @@ Node :
 
 ${node.name}
 
-Current Position : ${node.position}`,
+Position : ${node.position} / ${totalSiblings}`,
             reply_markup: {
               inline_keyboard: [
                 [
@@ -3124,6 +3139,276 @@ if (
 
 if (
         query.data.startsWith(
+          "moveup_file_"
+        )
+      ) {
+
+        const id =
+          query.data.replace(
+            "moveup_file_",
+            ""
+          );
+
+        const file =
+          await db.attachments.findOne({
+            _id: new ObjectId(id)
+          });
+
+        if (!file) {
+          return res.sendStatus(200);
+        }
+
+        const previous =
+          await db.attachments.find({
+            node_id:
+              file.node_id,
+            position: {
+              $lt: file.position
+            }
+          })
+          .sort({
+            position: -1
+          })
+          .limit(1)
+          .toArray();
+
+        if (previous.length) {
+
+          await db.attachments.updateOne(
+            {
+              _id: file._id
+            },
+            {
+              $set: {
+                position:
+                  previous[0].position
+              }
+            }
+          );
+
+          await db.attachments.updateOne(
+            {
+              _id:
+                previous[0]._id
+            },
+            {
+              $set: {
+                position:
+                  file.position
+              }
+            }
+          );
+        }
+
+        const updated =
+          await db.attachments.findOne({
+            _id: file._id
+          });
+
+        const totalFiles =
+          await db.attachments.countDocuments({
+            node_id:
+              file.node_id
+          });
+
+        const node =
+          await db.nodes.findOne({
+            public_id:
+              file.node_id
+          });
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`⬆⬇ Reorder Files
+
+Node :
+
+${node?.name || file.node_id}
+
+File :
+
+${updated.file_name}
+
+Position : ${updated.position} / ${totalFiles}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "⬆ Move Up",
+                    callback_data:
+                      `moveup_file_${id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "⬇ Move Down",
+                    callback_data:
+                      `movedown_file_${id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "⬅ Back",
+                    callback_data:
+                      `reorder_files_${file.node_id}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "movedown_file_"
+        )
+      ) {
+
+        const id =
+          query.data.replace(
+            "movedown_file_",
+            ""
+          );
+
+        const file =
+          await db.attachments.findOne({
+            _id: new ObjectId(id)
+          });
+
+        if (!file) {
+          return res.sendStatus(200);
+        }
+
+        const next =
+          await db.attachments.find({
+            node_id:
+              file.node_id,
+            position: {
+              $gt: file.position
+            }
+          })
+          .sort({
+            position: 1
+          })
+          .limit(1)
+          .toArray();
+
+        if (next.length) {
+
+          await db.attachments.updateOne(
+            {
+              _id: file._id
+            },
+            {
+              $set: {
+                position:
+                  next[0].position
+              }
+            }
+          );
+
+          await db.attachments.updateOne(
+            {
+              _id:
+                next[0]._id
+            },
+            {
+              $set: {
+                position:
+                  file.position
+              }
+            }
+          );
+        }
+
+        const updated =
+          await db.attachments.findOne({
+            _id: file._id
+          });
+
+        const totalFiles =
+          await db.attachments.countDocuments({
+            node_id:
+              file.node_id
+          });
+
+        const node =
+          await db.nodes.findOne({
+            public_id:
+              file.node_id
+          });
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`⬆⬇ Reorder Files
+
+Node :
+
+${node?.name || file.node_id}
+
+File :
+
+${updated.file_name}
+
+Position : ${updated.position} / ${totalFiles}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "⬆ Move Up",
+                    callback_data:
+                      `moveup_file_${id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "⬇ Move Down",
+                    callback_data:
+                      `movedown_file_${id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "⬅ Back",
+                    callback_data:
+                      `reorder_files_${file.node_id}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
           "attach_files_"
         )
       ) {
@@ -3177,6 +3462,111 @@ Press ✅ Done when finished.`,
                   }
                 ]
               ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "reorder_files_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "reorder_files_",
+            ""
+          );
+
+        const files =
+          await db.attachments.find({
+            node_id: publicId
+          }).sort({
+            position: 1
+          }).toArray();
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId
+          });
+
+        if (!files.length) {
+
+          await axios.post(
+            `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+            {
+              chat_id:
+                query.message.chat.id,
+              message_id:
+                query.message.message_id,
+              text:
+`⬆⬇ Reorder Files
+
+Node :
+
+${node?.name || publicId}
+
+No files attached.`,
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text:
+                        "⬅ Back",
+                      callback_data:
+                        `node_actions_${publicId}`
+                    }
+                  ]
+                ]
+              }
+            }
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const buttons =
+          files.map(
+            file => [{
+              text:
+                file.file_name,
+              callback_data:
+                `reorder_file_${file._id}`
+            }]
+          );
+
+        buttons.push([
+          {
+            text:
+              "⬅ Back",
+            callback_data:
+              `node_actions_${publicId}`
+          }
+        ]);
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`⬆⬇ Reorder Files
+
+Node :
+
+${node?.name || publicId}
+
+Files :`,
+            reply_markup: {
+              inline_keyboard:
+                buttons
             }
           }
         );
@@ -3282,6 +3672,98 @@ Files :`,
             reply_markup: {
               inline_keyboard:
                 buttons
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "reorder_file_"
+        )
+      ) {
+
+        const id =
+          query.data.replace(
+            "reorder_file_",
+            ""
+          );
+
+        const file =
+          await db.attachments.findOne({
+            _id: new ObjectId(id)
+          });
+
+        if (!file) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Attachment not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const totalFiles =
+          await db.attachments.countDocuments({
+            node_id: file.node_id
+          });
+
+        const node =
+          await db.nodes.findOne({
+            public_id: file.node_id
+          });
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`⬆⬇ Reorder Files
+
+Node :
+
+${node?.name || file.node_id}
+
+File :
+
+${file.file_name}
+
+Position : ${file.position} / ${totalFiles}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "⬆ Move Up",
+                    callback_data:
+                      `moveup_file_${id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "⬇ Move Down",
+                    callback_data:
+                      `movedown_file_${id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "⬅ Back",
+                    callback_data:
+                      `reorder_files_${file.node_id}`
+                  }
+                ]
+              ]
             }
           }
         );
