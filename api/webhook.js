@@ -2976,6 +2976,215 @@ No files attached yet.`,
 
 if (
         query.data.startsWith(
+          "attach_done_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "attach_done_",
+            ""
+          );
+
+        const state =
+          nodeFilesState[
+            query.message.chat.id
+          ];
+
+        if (
+          !state ||
+          !state.files.length
+        ) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ No files queued."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId
+          });
+
+        const preview =
+          state.files
+            .slice(0, 20)
+            .map(
+              x => `• ${x.file_name}`
+            )
+            .join("\n");
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`📎 Attach Files
+
+Node :
+
+${node?.name || publicId}
+
+Files :
+
+${preview}
+
+Total Files : ${state.files.length}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "✅ Confirm",
+                    callback_data:
+                      `attach_confirm_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `attach_cancel_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "attach_cancel_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "attach_cancel_",
+            ""
+          );
+
+        delete nodeFilesState[
+          query.message.chat.id
+        ];
+
+        await renderLibraryNode(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          publicId
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "attach_confirm_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "attach_confirm_",
+            ""
+          );
+
+        const state =
+          nodeFilesState[
+            query.message.chat.id
+          ];
+
+        if (
+          !state ||
+          !state.files.length
+        ) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ No files queued."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        let position = 1;
+
+        for (const file of state.files) {
+
+          await db.attachments.insertOne({
+            node_id: publicId,
+            file_id: file.file_id,
+            file_name:
+              file.file_name,
+            media_type:
+              file.media_type,
+            position,
+            attached_at:
+              new Date()
+          });
+
+          position++;
+        }
+
+        const total =
+          state.files.length;
+
+        delete nodeFilesState[
+          query.message.chat.id
+        ];
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`✅ Files Attached
+
+Node :
+
+${publicId}
+
+Attached Files : ${total}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "⬅ Back",
+                    callback_data:
+                      `lib_open_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
           "trash_node_"
         )
       ) {
