@@ -508,6 +508,130 @@ ${newName}`
 
 
 
+      const attachState =
+        nodeFilesState[chatId];
+
+      if (
+        attachState &&
+        attachState.action ===
+          "attach_files" &&
+        String(chatId) ===
+          String(ADMIN_ID)
+      ) {
+
+        let file = null;
+
+        if (msg.document) {
+
+          file = {
+            file_id:
+              msg.document.file_id,
+            file_name:
+              msg.document.file_name ||
+              "Unnamed File",
+            media_type:
+              "document"
+          };
+        }
+
+        else if (msg.audio) {
+
+          file = {
+            file_id:
+              msg.audio.file_id,
+            file_name:
+              msg.audio.file_name ||
+              msg.audio.title ||
+              "Unnamed Audio",
+            media_type:
+              "audio"
+          };
+        }
+
+        else if (msg.video) {
+
+          file = {
+            file_id:
+              msg.video.file_id,
+            file_name:
+              msg.video.file_name ||
+              "Unnamed Video",
+            media_type:
+              "video"
+          };
+        }
+
+        else if (msg.photo) {
+
+          const photo =
+            msg.photo[
+              msg.photo.length - 1
+            ];
+
+          file = {
+            file_id:
+              photo.file_id,
+            file_name:
+              "Photo",
+            media_type:
+              "photo"
+          };
+        }
+
+        else if (msg.animation) {
+
+          file = {
+            file_id:
+              msg.animation.file_id,
+            file_name:
+              msg.animation.file_name ||
+              "GIF",
+            media_type:
+              "animation"
+          };
+        }
+
+        else if (msg.sticker) {
+
+          file = {
+            file_id:
+              msg.sticker.file_id,
+            file_name:
+              "Sticker",
+            media_type:
+              "sticker"
+          };
+        }
+
+        else if (msg.voice) {
+
+          file = {
+            file_id:
+              msg.voice.file_id,
+            file_name:
+              "Voice Message",
+            media_type:
+              "voice"
+          };
+        }
+
+        if (file) {
+
+          attachState.files.push(
+            file
+          );
+
+          await sendMessage(
+            chatId,
+            `📎 Queued: ${file.file_name}`
+          );
+        }
+
+        return res.sendStatus(200);
+      }
+
+
+
       if (uploadMode[chatId] && String(chatId) === String(ADMIN_ID)) {
 
         let file = null;
