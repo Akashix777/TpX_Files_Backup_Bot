@@ -3038,6 +3038,140 @@ Files :`,
 
 if (
         query.data.startsWith(
+          "detach_select_"
+        )
+      ) {
+
+        const id =
+          query.data.replace(
+            "detach_select_",
+            ""
+          );
+
+        const file =
+          await db.attachments.findOne({
+            _id: new ObjectId(id)
+          });
+
+        if (!file) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Attachment not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`⚠ Detach File ?
+
+${file.file_name}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "✅ Confirm",
+                    callback_data:
+                      `detach_confirm_${id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `detach_files_${file.node_id}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "detach_confirm_"
+        )
+      ) {
+
+        const id =
+          query.data.replace(
+            "detach_confirm_",
+            ""
+          );
+
+        const file =
+          await db.attachments.findOne({
+            _id: new ObjectId(id)
+          });
+
+        if (!file) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Attachment not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await db.attachments.deleteOne({
+          _id: new ObjectId(id)
+        });
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`✅ File Detached
+
+Node :
+
+${file.node_id}
+
+Detached :
+
+${file.file_name}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "⬅ Back",
+                    callback_data:
+                      `detach_files_${file.node_id}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
           "attach_done_"
         )
       ) {
