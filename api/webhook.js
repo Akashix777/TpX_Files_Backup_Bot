@@ -2695,6 +2695,73 @@ if (
 
 if (
         query.data.startsWith(
+          "trash_node_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "trash_node_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId,
+            is_trashed: false
+          });
+
+        if (!node) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`⚠ Move node to trash?
+
+${node.name}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "♻ Confirm",
+                    callback_data:
+                      `confirm_trash_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `node_actions_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
           "rename_node_"
         )
       ) {
