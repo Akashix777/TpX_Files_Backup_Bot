@@ -2855,6 +2855,14 @@ if (
                 [
                   {
                     text:
+                      "⬆⬇ Reorder Node",
+                    callback_data:
+                      `reorder_node_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
                       "♻ Move To Trash",
                     callback_data:
                       `trash_node_${publicId}`
@@ -2877,6 +2885,236 @@ if (
               ]
             }
           }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "reorder_node_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "reorder_node_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId
+          });
+
+        if (!node) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`⬆⬇ Reorder Node
+
+Node :
+
+${node.name}
+
+Current Position : ${node.position}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "⬆ Move Up",
+                    callback_data:
+                      `moveup_node_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "⬇ Move Down",
+                    callback_data:
+                      `movedown_node_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "⬅ Back",
+                    callback_data:
+                      `node_actions_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "moveup_node_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "moveup_node_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId
+          });
+
+        if (!node) {
+          return res.sendStatus(200);
+        }
+
+        const previous =
+          await db.nodes.find({
+            parent_id:
+              node.parent_id,
+            is_trashed: false,
+            position: {
+              $lt: node.position
+            }
+          })
+          .sort({
+            position: -1
+          })
+          .limit(1)
+          .toArray();
+
+        if (previous.length) {
+
+          await db.nodes.updateOne(
+            {
+              _id: node._id
+            },
+            {
+              $set: {
+                position:
+                  previous[0].position
+              }
+            }
+          );
+
+          await db.nodes.updateOne(
+            {
+              _id:
+                previous[0]._id
+            },
+            {
+              $set: {
+                position:
+                  node.position
+              }
+            }
+          );
+        }
+
+        await renderLibraryNode(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          node.parent_id
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "movedown_node_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "movedown_node_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId
+          });
+
+        if (!node) {
+          return res.sendStatus(200);
+        }
+
+        const next =
+          await db.nodes.find({
+            parent_id:
+              node.parent_id,
+            is_trashed: false,
+            position: {
+              $gt: node.position
+            }
+          })
+          .sort({
+            position: 1
+          })
+          .limit(1)
+          .toArray();
+
+        if (next.length) {
+
+          await db.nodes.updateOne(
+            {
+              _id: node._id
+            },
+            {
+              $set: {
+                position:
+                  next[0].position
+              }
+            }
+          );
+
+          await db.nodes.updateOne(
+            {
+              _id:
+                next[0]._id
+            },
+            {
+              $set: {
+                position:
+                  node.position
+              }
+            }
+          );
+        }
+
+        await renderLibraryNode(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          node.parent_id
         );
 
         return res.sendStatus(200);
