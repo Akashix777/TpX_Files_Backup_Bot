@@ -31,9 +31,12 @@ const adminState = {};
 
 const nodeActionState = {};
 
+const nodeFilesState = {};
+
 function clearAdminStates(chatId) {
 
   nodeActionState[chatId] = null;
+  nodeFilesState[chatId] = null;
 
   uploadMode[chatId] = false;
   uploadType[chatId] = null;
@@ -2687,6 +2690,22 @@ if (
                 [
                   {
                     text:
+                      "📎 Attach Files",
+                    callback_data:
+                      `attach_files_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❌ Detach Files",
+                    callback_data:
+                      `detach_files_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
                       "✏ Rename Node",
                     callback_data:
                       `rename_node_${publicId}`
@@ -2712,6 +2731,113 @@ if (
                       "❌ CLOSE",
                     callback_data:
                       "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "attach_files_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "attach_files_",
+            ""
+          );
+
+        nodeFilesState[
+          query.message.chat.id
+        ] = {
+          action: "attach_files",
+          publicId,
+          files: [],
+          createdAt: Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`📎 Attach Files
+
+Send or Forward files.
+
+You may send multiple files.
+
+Press ✅ Done when finished.`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "✅ Done",
+                    callback_data:
+                      `attach_done_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `lib_open_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "detach_files_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "detach_files_",
+            ""
+          );
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`❌ Detach Files
+
+No files attached yet.`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "⬅ Back",
+                    callback_data:
+                      `node_actions_${publicId}`
                   }
                 ]
               ]
