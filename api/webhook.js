@@ -2943,6 +2943,72 @@ if (
             ""
           );
 
+        const files =
+          await db.attachments.find({
+            node_id: publicId
+          }).sort({
+            position: 1
+          }).toArray();
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId
+          });
+
+        if (!files.length) {
+
+          await axios.post(
+            `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+            {
+              chat_id:
+                query.message.chat.id,
+              message_id:
+                query.message.message_id,
+              text:
+`❌ Detach Files
+
+Node :
+
+${node?.name || publicId}
+
+No files attached.`,
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text:
+                        "⬅ Back",
+                      callback_data:
+                        `node_actions_${publicId}`
+                    }
+                  ]
+                ]
+              }
+            }
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const buttons =
+          files.slice(0, 50).map(
+            file => [{
+              text:
+                file.file_name,
+              callback_data:
+                `detach_select_${file._id}`
+            }]
+          );
+
+        buttons.push([
+          {
+            text:
+              "⬅ Back",
+            callback_data:
+              `node_actions_${publicId}`
+          }
+        ]);
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
@@ -2953,18 +3019,14 @@ if (
             text:
 `❌ Detach Files
 
-No files attached yet.`,
+Node :
+
+${node?.name || publicId}
+
+Files :`,
             reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text:
-                      "⬅ Back",
-                    callback_data:
-                      `node_actions_${publicId}`
-                  }
-                ]
-              ]
+              inline_keyboard:
+                buttons
             }
           }
         );
@@ -4073,7 +4135,31 @@ if (query.data === "admin_back") {
     res.sendStatus(200);
 
   } catch (err) {
-    console.log(err.response?.data || err.message || err);
+
+    const desc =
+      err?.response?.data?.description || "";
+
+    if (
+      desc.includes(
+        "message is not modified"
+      ) ||
+      desc.includes(
+        "message to edit not found"
+      ) ||
+      desc.includes(
+        "message to delete not found"
+      )
+    ) {
+
+      return res.sendStatus(200);
+    }
+
+    console.log(
+      err.response?.data ||
+      err.message ||
+      err
+    );
+
     res.sendStatus(500);
   }
 });
