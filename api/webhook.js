@@ -149,6 +149,37 @@ async function ensureRootNode(db) {
 }
 
 
+async function getNodeDescendants(
+  db,
+  parentId
+) {
+
+  const result = [];
+
+  async function walk(nodeId) {
+
+    const children =
+      await db.nodes.find({
+        parent_id: nodeId,
+        is_trashed: false
+      }).toArray();
+
+    for (const child of children) {
+
+      result.push(child);
+
+      await walk(
+        child.public_id
+      );
+    }
+  }
+
+  await walk(parentId);
+
+  return result;
+}
+
+
 async function renderLibraryRoot(
   db,
   chatId,
@@ -2721,6 +2752,28 @@ if (
           return res.sendStatus(200);
         }
 
+        const descendants =
+          await getNodeDescendants(
+            db,
+            publicId
+          );
+
+        const preview =
+          descendants
+            .slice(0, 15)
+            .map(
+              x => `• ${x.name}`
+            )
+            .join("\n");
+
+        const extra =
+          descendants.length > 15
+            ? "\n• ..."
+            : "";
+
+        const affectedCount =
+          descendants.length + 1;
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
@@ -2731,7 +2784,14 @@ if (
             text:
 `⚠ Move node to trash?
 
-${node.name}`,
+${node.name}
+
+${descendants.length
+  ? `Children affected:
+${preview}${extra}
+
+`
+  : ""}Total affected nodes: ${affectedCount}`,
             reply_markup: {
               inline_keyboard: [
                 [
