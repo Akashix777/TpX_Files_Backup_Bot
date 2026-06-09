@@ -27,6 +27,27 @@ const pendingBanId = {};
 
 const historySearchMode = {};
 
+const adminState = {};
+
+const nodeActionState = {};
+
+function clearAdminStates(chatId) {
+
+  nodeActionState[chatId] = null;
+
+  uploadMode[chatId] = false;
+  uploadType[chatId] = null;
+
+  broadcastMode[chatId] = false;
+
+  banMode[chatId] = false;
+  pendingBanId[chatId] = null;
+
+  historySearchMode[chatId] = false;
+
+  delete adminState[chatId];
+}
+
 
 
 async function getDB() {
@@ -38,7 +59,12 @@ async function getDB() {
     users: client.db("telegramBot").collection("users"),
     history: client.db("telegramBot").collection("history"),
     searches: client.db("telegramBot").collection("searches"),
-    counters: client.db("telegramBot").collection("counters")
+    counters: client.db("telegramBot").collection("counters"),
+
+    nodes: client.db("telegramBot").collection("nodes"),
+    attachments: client.db("telegramBot").collection("attachments"),
+    share_links: client.db("telegramBot").collection("share_links"),
+    settings: client.db("telegramBot").collection("settings")
   };
 }
 
@@ -77,6 +103,248 @@ async function sendPhoto(chatId, photo, caption, keyboard = null) {
   );
 }
 
+
+
+async function getNextNodeId(db) {
+  const result =
+    await db.counters.findOneAndUpdate(
+      { _id: "nodes" },
+      { $inc: { value: 1 } },
+      {
+        upsert: true,
+        returnDocument: "after"
+      }
+    );
+
+  return "N" + String(
+    result.value
+  ).padStart(4, "0");
+}
+
+async function ensureRootNode(db) {
+
+  const existing =
+    await db.nodes.findOne({
+      public_id: "ROOT"
+    });
+
+  if (existing) {
+    return;
+  }
+
+  await db.nodes.insertOne({
+    public_id: "ROOT",
+    name: "ROOT",
+    parent_id: null,
+    position: 0,
+    description: "",
+    poster_file_id: null,
+    custom_sort_character: null,
+    is_trashed: false,
+    created_at: new Date(),
+    updated_at: new Date()
+  });
+
+  console.log("ROOT node created");
+}
+
+
+async function getNodeDescendants(
+  db,
+  parentId
+) {
+
+  const result = [];
+
+  async function walk(nodeId) {
+
+    const children =
+      await db.nodes.find({
+        parent_id: nodeId,
+        is_trashed: false
+      }).toArray();
+
+    for (const child of children) {
+
+      result.push(child);
+
+      await walk(
+        child.public_id
+      );
+    }
+  }
+
+  await walk(parentId);
+
+  return result;
+}
+
+
+async function renderLibraryRoot(
+  db,
+  chatId,
+  messageId
+) {
+
+  const children =
+    await db.nodes.find({
+      parent_id: "ROOT",
+      is_trashed: false
+    }).sort({
+      position: 1,
+      name: 1
+    }).toArray();
+
+  const buttons = children.map(
+    node => [{
+      text: node.name,
+      callback_data:
+        `lib_open_${node.public_id}`
+    }]
+  );
+
+  buttons.push([
+    {
+      text: "➕ Create Child Node",
+      callback_data:
+        "admin_create_ROOT"
+    }
+  ]);
+
+  buttons.push([
+    {
+      text: "⬅ BACK",
+      callback_data:
+        "back_admin_panel"
+    },
+    {
+      text: "❌ CLOSE",
+      callback_data:
+        "close_search"
+    }
+  ]);
+
+  await axios.post(
+    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+    {
+      chat_id: chatId,
+      message_id: messageId,
+      text:
+        "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+      reply_markup: {
+        inline_keyboard:
+          buttons
+      }
+    }
+  );
+}
+
+
+async function renderLibraryNode(
+  db,
+  chatId,
+  messageId,
+  publicId
+) {
+
+  const node =
+    await db.nodes.findOne({
+      public_id: publicId,
+      is_trashed: false
+    });
+
+  if (!node) {
+    return;
+  }
+
+  const children =
+    await db.nodes.find({
+      parent_id: node.public_id,
+      is_trashed: false
+    }).sort({
+      position: 1,
+      name: 1
+    }).toArray();
+
+  const buttons = children.map(
+    child => [{
+      text: child.name,
+      callback_data:
+        `lib_open_${child.public_id}`
+    }]
+  );
+
+  buttons.push([
+    {
+      text: "➕ Create Child Node",
+      callback_data:
+        `admin_create_${node.public_id}`
+    }
+  ]);
+
+  buttons.push([
+    {
+      text: "⚙ Node Actions",
+      callback_data:
+        `node_actions_${node.public_id}`
+    }
+  ]);
+
+  if (
+    node.parent_id === "ROOT"
+  ) {
+
+    buttons.push([
+      {
+        text: "⬅ BACK",
+        callback_data:
+          `lib_back_${node.parent_id}`
+      },
+      {
+        text: "❌ CLOSE",
+        callback_data:
+          "close_search"
+      }
+    ]);
+
+  } else {
+
+    buttons.push([
+      {
+        text: "⬅ BACK",
+        callback_data:
+          `lib_back_${node.parent_id}`
+      },
+      {
+        text: "🏡 N-HOME",
+        callback_data:
+          "bankai_library"
+      },
+      {
+        text: "❌ CLOSE",
+        callback_data:
+          "close_search"
+      }
+    ]);
+
+  }
+
+  await axios.post(
+    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+    {
+      chat_id: chatId,
+      message_id: messageId,
+      text:
+        `ROOT > ${node.name}`,
+      reply_markup: {
+        inline_keyboard:
+          buttons
+      }
+    }
+  );
+}
+
+
 app.get("/", (req, res) => {
   res.send("Bot is alive");
 });
@@ -92,6 +360,135 @@ app.post("/webhook", async (req, res) => {
       const chatId = msg.chat.id;
       const text = msg.text || "";
       const command = text.toLowerCase();
+
+      const state = adminState[chatId];
+
+      if (
+        state &&
+        state.action === "create_node"
+      ) {
+
+        if (
+          Date.now() - state.createdAt >
+          180000
+        ) {
+
+          delete adminState[chatId];
+
+          await sendMessage(
+            chatId,
+            "❌ Action timed out."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const nodeName = text.trim();
+
+        if (!nodeName) {
+          return res.sendStatus(200);
+        }
+
+        const publicId =
+          await getNextNodeId(db);
+
+        await db.nodes.insertOne({
+          public_id: publicId,
+          name: nodeName,
+          parent_id:
+            state.parentNodeId,
+          position: 0,
+          description: "",
+          poster_file_id: null,
+          custom_sort_character: null,
+          is_trashed: false,
+          created_at: new Date(),
+          updated_at: new Date()
+        });
+
+        delete adminState[chatId];
+
+        await sendMessage(
+          chatId,
+          `✅ Node Created\n\n${nodeName}\n(${publicId})`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+      const nodeAction =
+        nodeActionState[chatId];
+
+      if (
+        nodeAction &&
+        nodeAction.action ===
+          "rename_node"
+      ) {
+
+        const newName =
+          text.trim();
+
+        if (!newName) {
+
+          return res.sendStatus(200);
+        }
+
+        const node =
+          await db.nodes.findOne({
+            public_id:
+              nodeAction.publicId,
+            is_trashed: false
+          });
+
+        if (!node) {
+
+          nodeActionState[
+            chatId
+          ] = null;
+
+          await sendMessage(
+            chatId,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await db.nodes.updateOne(
+          {
+            public_id:
+              nodeAction.publicId
+          },
+          {
+            $set: {
+              name: newName,
+              updated_at:
+                new Date()
+            }
+          }
+        );
+
+        nodeActionState[
+          chatId
+        ] = null;
+
+        await sendMessage(
+          chatId,
+`✅ Node Renamed
+
+Old:
+${node.name}
+
+New:
+${newName}`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
 
       const existingUser =
         await db.users.findOne({
@@ -876,9 +1273,16 @@ I'm TpX Bot.`;
 
         await sendMessage(
           chatId,
-          "Admin Panel",
+          "⚙️ Admin Panel",
           {
             inline_keyboard: [
+              [
+                {
+                  text: " ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ ",
+                  callback_data: "bankai_library"
+                }
+              ],
+
               [
                 {
                   text: " 🗃️ Upload ",
@@ -974,9 +1378,9 @@ if (command.startsWith("/list")) {
 
       if (query.data === "close_search") {
 
-        uploadMode[query.message.chat.id] = false;
-        uploadType[query.message.chat.id] = null;
-        broadcastMode[query.message.chat.id] = false;
+        clearAdminStates(
+          query.message.chat.id
+        );
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
@@ -992,9 +1396,9 @@ if (command.startsWith("/list")) {
       
       if (query.data === "admin_upload") {
 
-        uploadMode[query.message.chat.id] = false;
-        uploadType[query.message.chat.id] = null;
-        broadcastMode[query.message.chat.id] = false;
+        clearAdminStates(
+          query.message.chat.id
+        );
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
@@ -2110,9 +2514,9 @@ if (query.data === "admin_broadcast") {
 
       if (query.data === "stop_upload_button") {
 
-        uploadMode[query.message.chat.id] = false;
-        uploadType[query.message.chat.id] = null;
-        broadcastMode[query.message.chat.id] = false;
+        clearAdminStates(
+          query.message.chat.id
+        );
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
@@ -2141,6 +2545,301 @@ if (query.data === "admin_broadcast") {
       }
 
 
+if (query.data === "bankai_library") {
+
+        delete adminState[
+          query.message.chat.id
+        ];
+
+        await renderLibraryRoot(
+          db,
+          query.message.chat.id,
+          query.message.message_id
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "admin_create_"
+        )
+      ) {
+
+        const parentNodeId =
+          query.data.replace(
+            "admin_create_",
+            ""
+          );
+
+        adminState[
+          query.message.chat.id
+        ] = {
+          action: "create_node",
+          parentNodeId,
+          createdAt: Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+              "Enter node name:\n\nExample:\n⛩️ Anime",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "❌ Cancel",
+                    callback_data:
+                      "bankai_library"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (query.data.startsWith("lib_open_")) {
+
+        const publicId =
+          query.data.replace(
+            "lib_open_",
+            ""
+          );
+
+        await renderLibraryNode(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          publicId
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (query.data.startsWith("lib_back_")) {
+
+        const parentId =
+          query.data.replace(
+            "lib_back_",
+            ""
+          );
+
+        if (parentId === "ROOT") {
+
+          await renderLibraryRoot(
+            db,
+            query.message.chat.id,
+            query.message.message_id
+          );
+
+        } else {
+
+          await renderLibraryNode(
+            db,
+            query.message.chat.id,
+            query.message.message_id,
+            parentId
+          );
+        }
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "node_actions_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "node_actions_",
+            ""
+          );
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+              "⚙ Node Actions",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "✏ Rename Node",
+                    callback_data:
+                      `rename_node_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "♻ Move To Trash",
+                    callback_data:
+                      `trash_node_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "⬅ Back",
+                    callback_data:
+                      `lib_open_${publicId}`
+                  },
+                  {
+                    text:
+                      "❌ CLOSE",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "trash_node_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "trash_node_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId,
+            is_trashed: false
+          });
+
+        if (!node) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`⚠ Move node to trash?
+
+${node.name}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "♻ Confirm",
+                    callback_data:
+                      `confirm_trash_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `node_actions_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "rename_node_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "rename_node_",
+            ""
+          );
+
+        nodeActionState[
+          query.message.chat.id
+        ] = {
+          action: "rename_node",
+          publicId,
+          createdAt: Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+              "✏ Send new node name",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `node_actions_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
 if (query.data === "admin_back") {
 
         return res.sendStatus(200);
@@ -2149,18 +2848,25 @@ if (query.data === "admin_back") {
       
       if (query.data === "back_admin_panel") {
 
-        uploadMode[query.message.chat.id] = false;
-        uploadType[query.message.chat.id] = null;
-        broadcastMode[query.message.chat.id] = false;
+        clearAdminStates(
+          query.message.chat.id
+        );
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
             chat_id: query.message.chat.id,
             message_id: query.message.message_id,
-            text: "Admin Panel",
+            text: "⚙️ Admin Panel",
             reply_markup: {
               inline_keyboard: [
+                [
+                  {
+                    text: " ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ ",
+                    callback_data: "bankai_library"
+                  }
+                ],
+
                 [
                   {
                     text: " 🗃️ Upload ",
@@ -2778,6 +3484,50 @@ if (query.data === "admin_back") {
   }
 });
 
+
+async function initializeDatabase() {
+  const db = await getDB();
+
+  await ensureRootNode(db);
+
+  await db.nodes.createIndex(
+    { public_id: 1 },
+    { unique: true }
+  );
+
+  await db.nodes.createIndex({
+    parent_id: 1
+  });
+
+  await db.nodes.createIndex({
+    name: 1
+  });
+
+  await db.nodes.createIndex({
+    is_trashed: 1
+  });
+
+  await db.attachments.createIndex({
+    node_id: 1
+  });
+
+  await db.share_links.createIndex(
+    { token: 1 },
+    { unique: true }
+  );
+
+  await db.users.createIndex({
+    chat_id: 1
+  });
+}
+
+initializeDatabase()
+  .then(() => {
+    console.log("DB Ready");
+  })
+  .catch(console.error);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
