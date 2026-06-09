@@ -2782,16 +2782,17 @@ if (
             message_id:
               query.message.message_id,
             text:
-`⚠ Move node to trash?
+`⚠  𝗠𝗼𝘃𝗲 𝗡𝗼𝗱𝗲 𝘁𝗼 𝗧𝗿𝗮𝘀𝗵 ?
 
 ${node.name}
 
 ${descendants.length
-  ? `Children affected:
+  ? `𝐂𝐡𝐢𝐥𝐝𝐫𝐞𝐧 𝐍𝐨𝐝𝐞𝐬 𝐀𝐟𝐟𝐞𝐜𝐭𝐞𝐝 :
+
 ${preview}${extra}
 
 `
-  : ""}Total affected nodes: ${affectedCount}`,
+  : ""}𝚃𝚘𝚝𝚊𝚕 𝙰𝚏𝚏𝚎𝚌𝚝𝚎𝚍 𝙽𝚘𝚍𝚎𝚜 : ${affectedCount}`,
             reply_markup: {
               inline_keyboard: [
                 [
@@ -2808,6 +2809,111 @@ ${preview}${extra}
                       "❌ Cancel",
                     callback_data:
                       `node_actions_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "confirm_trash_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "confirm_trash_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId,
+            is_trashed: false
+          });
+
+        if (!node) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const descendants =
+          await getNodeDescendants(
+            db,
+            publicId
+          );
+
+        const ids = [
+          publicId,
+          ...descendants.map(
+            x => x.public_id
+          )
+        ];
+
+        await db.nodes.updateMany(
+          {
+            public_id: {
+              $in: ids
+            }
+          },
+          {
+            $set: {
+              is_trashed: true,
+              updated_at:
+                new Date()
+            }
+          }
+        );
+
+        const affectedCount =
+          ids.length;
+
+        const backTarget =
+          node.parent_id === "ROOT"
+            ? "bankai_library"
+            : `lib_open_${node.parent_id}`;
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`♻  𝗡𝗼𝗱𝗲𝘀 𝗠𝗼𝘃𝗲𝗱 𝘁𝗼 𝗧𝗿𝗮𝘀𝗵
+
+Root Node :
+
+${node.name}
+
+Affected Nodes : ${affectedCount}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "⬅ Back",
+                    callback_data:
+                      backTarget
+                  },
+                  {
+                    text:
+                      "❌ CLOSE",
+                    callback_data:
+                      "close_search"
                   }
                 ]
               ]
