@@ -4061,7 +4061,20 @@ if (
           return res.sendStatus(200);
         }
 
-        let position = 1;
+        const lastFile =
+          await db.attachments.find({
+            node_id: publicId
+          })
+          .sort({
+            position: -1
+          })
+          .limit(1)
+          .toArray();
+
+        let position =
+          lastFile.length
+            ? lastFile[0].position + 1
+            : 1;
 
         for (const file of state.files) {
 
