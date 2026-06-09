@@ -183,6 +183,42 @@ async function getNodeDescendants(
 }
 
 
+
+async function normalizeAttachmentPositions(
+  db,
+  nodeId
+) {
+
+  const files =
+    await db.attachments.find({
+      node_id: nodeId
+    })
+    .sort({
+      position: 1,
+      attached_at: 1
+    })
+    .toArray();
+
+  let position = 1;
+
+  for (const file of files) {
+
+    await db.attachments.updateOne(
+      {
+        _id: file._id
+      },
+      {
+        $set: {
+          position
+        }
+      }
+    );
+
+    position++;
+  }
+}
+
+
 async function renderLibraryRoot(
   db,
   chatId,
@@ -2934,6 +2970,46 @@ if (
             is_trashed: false
           });
 
+        const buttons = [];
+
+        if (
+          node.position > 1
+        ) {
+
+          buttons.push([
+            {
+              text:
+                "⬆ Move Up",
+              callback_data:
+                `moveup_node_${publicId}`
+            }
+          ]);
+        }
+
+        if (
+          node.position <
+          totalSiblings
+        ) {
+
+          buttons.push([
+            {
+              text:
+                "⬇ Move Down",
+              callback_data:
+                `movedown_node_${publicId}`
+            }
+          ]);
+        }
+
+        buttons.push([
+          {
+            text:
+              "⬅ Back",
+            callback_data:
+              `node_actions_${publicId}`
+          }
+        ]);
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
@@ -2950,32 +3026,8 @@ ${node.name}
 
 Position : ${node.position} / ${totalSiblings}`,
             reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text:
-                      "⬆ Move Up",
-                    callback_data:
-                      `moveup_node_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "⬇ Move Down",
-                    callback_data:
-                      `movedown_node_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "⬅ Back",
-                    callback_data:
-                      `node_actions_${publicId}`
-                  }
-                ]
-              ]
+              inline_keyboard:
+                buttons
             }
           }
         );
@@ -3199,6 +3251,16 @@ if (
             }
           );
         }
+
+        await normalizeAttachmentPositions(
+          db,
+          file.node_id
+        );
+
+        await normalizeAttachmentPositions(
+          db,
+          file.node_id
+        );
 
         const updated =
           await db.attachments.findOne({
@@ -3870,6 +3932,11 @@ if (
           _id: new ObjectId(id)
         });
 
+        await normalizeAttachmentPositions(
+          db,
+          file.node_id
+        );
+
         const node =
           await db.nodes.findOne({
             public_id:
@@ -4092,6 +4159,11 @@ if (
 
           position++;
         }
+
+        await normalizeAttachmentPositions(
+          db,
+          publicId
+        );
 
         const total =
           state.files.length;
