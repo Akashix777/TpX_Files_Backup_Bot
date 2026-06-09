@@ -395,12 +395,29 @@ app.post("/webhook", async (req, res) => {
         const publicId =
           await getNextNodeId(db);
 
+        const lastNode =
+          await db.nodes.find({
+            parent_id:
+              state.parentNodeId
+          })
+          .sort({
+            position: -1
+          })
+          .limit(1)
+          .toArray();
+
+        const nextPosition =
+          lastNode.length
+            ? lastNode[0].position + 1
+            : 1;
+
         await db.nodes.insertOne({
           public_id: publicId,
           name: nodeName,
           parent_id:
             state.parentNodeId,
-          position: 0,
+          position:
+            nextPosition,
           description: "",
           poster_file_id: null,
           custom_sort_character: null,
@@ -3133,6 +3150,12 @@ if (
           _id: new ObjectId(id)
         });
 
+        const node =
+          await db.nodes.findOne({
+            public_id:
+              file.node_id
+          });
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
@@ -3145,7 +3168,7 @@ if (
 
 Node :
 
-${file.node_id}
+${node?.name || file.node_id}
 
 Detached :
 
@@ -3356,7 +3379,7 @@ if (
 
 Node :
 
-${publicId}
+${node?.name || publicId}
 
 Attached Files : ${total}`,
             reply_markup: {
