@@ -747,10 +747,41 @@ NO = 1, 2, 3`
 
 ${preview}
 
-Total Nodes : ${state.endNumber}
-
-Type CREATE to continue
-Type CANCEL to abort`
+Total Nodes : ${state.endNumber}`,
+          {
+            inline_keyboard: [
+              [
+                {
+                  text:
+                    "✅ CREATE",
+                  callback_data:
+                    `auto_create_confirm_${chatId}`
+                },
+                {
+                  text:
+                    "🔙 BACK",
+                  callback_data:
+                    `auto_create_back_${chatId}`
+                }
+              ],
+              [
+                {
+                  text:
+                    "❎ CANCEL",
+                  callback_data:
+                    `auto_create_cancel_${chatId}`
+                }
+              ],
+              [
+                {
+                  text:
+                    "❌ CLOSE",
+                  callback_data:
+                    "close_search"
+                }
+              ]
+            ]
+          }
         );
 
         return res.sendStatus(200);
@@ -3416,6 +3447,105 @@ if (
           db,
           query.message.chat.id,
           query.message.message_id
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "auto_create_cancel_"
+        )
+      ) {
+
+        delete adminState[
+          query.message.chat.id
+        ];
+
+        await renderLibraryRoot(
+          db,
+          query.message.chat.id,
+          query.message.message_id
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "auto_create_back_"
+        )
+      ) {
+
+        const parentNodeId =
+          query.data.replace(
+            "auto_create_back_",
+            ""
+          );
+
+        delete adminState[
+          query.message.chat.id
+        ];
+
+        adminState[
+          query.message.chat.id
+        ] = {
+          action:
+            "auto_node_padding",
+          parentNodeId,
+          createdAt: Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`Padding ?
+
+YES = DYNAMIC : 001, 002, 003
+
+NO = 1, 2, 3`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "❌ CLOSE",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "auto_create_confirm_"
+        )
+      ) {
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/answerCallbackQuery`,
+          {
+            callback_query_id:
+              query.id,
+            text:
+              "Use CREATE in chat for now"
+          }
         );
 
         return res.sendStatus(200);
