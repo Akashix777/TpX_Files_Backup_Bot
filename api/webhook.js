@@ -737,6 +737,13 @@ NO = 1, 2, 3`
           endNumber:
             state.endNumber,
           paddingLength,
+
+          backPrefix:
+            state.prefix,
+
+          backEndNumber:
+            state.endNumber,
+
           createdAt:
             Date.now()
         };
@@ -3487,6 +3494,11 @@ if (
             ""
           );
 
+        const oldState =
+          adminState[
+            query.message.chat.id
+          ];
+
         delete adminState[
           query.message.chat.id
         ];
@@ -3496,8 +3508,18 @@ if (
         ] = {
           action:
             "auto_node_padding",
-          parentNodeId,
-          createdAt: Date.now()
+
+          parentNodeId:
+            oldState.parentNodeId,
+
+          prefix:
+            oldState.backPrefix,
+
+          endNumber:
+            oldState.backEndNumber,
+
+          createdAt:
+            Date.now()
         };
 
         await axios.post(
