@@ -680,7 +680,7 @@ Examples :
           chatId,
 `Padding ?
 
-YES = 001, 002, 003
+YES = DYNAMIC : 001, 002, 003
 
 NO = 1, 2, 3`
         );
