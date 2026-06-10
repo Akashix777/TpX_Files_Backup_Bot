@@ -2833,7 +2833,14 @@ if (
             message_id:
               query.message.message_id,
             text:
-              "Enter node name:\n\nExample:\n⛩️ Anime",
+`Enter Node Name :
+
+Example :
+
+Episode
+Series
+Get All
+⛩️  ANIME`,
             reply_markup: {
               inline_keyboard: [
                 [
@@ -2841,11 +2848,17 @@ if (
                     text:
                       "🔙  BACK",
                     callback_data:
-                      `admin_create_${parentNodeId}`
+                      `create_basic_back_${parentNodeId}`
                   },
                   {
                     text:
-                      "✖️  CLOSE",
+                      "❎  CANCEL",
+                    callback_data:
+                      `create_basic_cancel_${parentNodeId}`
+                  },
+                  {
+                    text:
+                      "❌  CLOSE",
                     callback_data:
                       "close_search"
                   }
@@ -2905,7 +2918,79 @@ Part`,
                     text:
                       "🔙  BACK",
                     callback_data:
-                      `admin_create_${parentNodeId}`
+                      `create_basic_back_${parentNodeId}`
+                  },
+                  {
+                    text:
+                      "❎  CANCEL",
+                    callback_data:
+                      `create_basic_cancel_${parentNodeId}`
+                  },
+                  {
+                    text:
+                      "❌  CLOSE",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+if (
+        query.data.startsWith(
+          "create_basic_back_"
+        )
+      ) {
+
+        const parentNodeId =
+          query.data.replace(
+            "create_basic_back_",
+            ""
+          );
+
+        delete adminState[
+          query.message.chat.id
+        ];
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`Choose Mode`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "ㅤBASICㅤ",
+                    callback_data:
+                      `create_basic_${parentNodeId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "ㅤPOWERFULㅤ❖ㅤAUTOMATEDㅤ",
+                    callback_data:
+                      `create_powerful_${parentNodeId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "🔙  BACK",
+                    callback_data:
+                      `lib_open_${parentNodeId}`
                   },
                   {
                     text:
@@ -2921,6 +3006,28 @@ Part`,
 
         return res.sendStatus(200);
       }
+
+
+
+if (
+        query.data.startsWith(
+          "create_basic_cancel_"
+        )
+      ) {
+
+        delete adminState[
+          query.message.chat.id
+        ];
+
+        await renderLibraryRoot(
+          db,
+          query.message.chat.id,
+          query.message.message_id
+        );
+
+        return res.sendStatus(200);
+      }
+
 
 
 if (query.data.startsWith("lib_open_")) {
