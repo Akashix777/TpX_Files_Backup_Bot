@@ -721,22 +721,7 @@ NO = 1, 2, 3`,
           "auto_node_padding"
       ) {
 
-        const answer =
-          text.trim()
-            .toUpperCase();
-
-        if (
-          answer !== "YES" &&
-          answer !== "NO"
-        ) {
-
-          await sendMessage(
-            chatId,
-            "Type YES or NO"
-          );
-
-          return res.sendStatus(200);
-        }
+        return res.sendStatus(200);
 
         const paddingLength =
           answer === "YES"
@@ -828,37 +813,7 @@ Total Nodes : ${state.endNumber}`,
           "auto_node_confirm"
       ) {
 
-        const answer =
-          text.trim()
-            .toUpperCase();
-
-        if (
-          answer === "CANCEL"
-        ) {
-
-          delete adminState[
-            chatId
-          ];
-
-          await sendMessage(
-            chatId,
-            "❌ Cancelled."
-          );
-
-          return res.sendStatus(200);
-        }
-
-        if (
-          answer !== "CREATE"
-        ) {
-
-          await sendMessage(
-            chatId,
-            "Type CREATE or CANCEL"
-          );
-
-          return res.sendStatus(200);
-        }
+        return res.sendStatus(200);
 
         const lastNode =
           await db.nodes.find({
