@@ -2833,7 +2833,7 @@ if (
             message_id:
               query.message.message_id,
             text:
-`Enter Node Name :
+`Enter Node Name :ㅤㅤㅤㅤㅤㅤㅤㅤ
 
 Example :
 
@@ -2957,11 +2957,6 @@ if (
         delete adminState[
           query.message.chat.id
         ];
-
-        await sendMessage(
-          query.message.chat.id,
-          "BACK PRESSED"
-        );
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
