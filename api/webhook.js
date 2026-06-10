@@ -283,35 +283,37 @@ function buildLibraryJumpButtons(
   totalPages
 ) {
 
-  const normal =
-    ["①","②","③","④","⑤","⑥"];
-
-  const active =
-    ["❶","❷","❸","❹","❺","❻"];
-
-  let startPage =
-    Math.max(
-      1,
-      Math.min(
-        page - 2,
-        totalPages - 5
-      )
-    );
-
-  const endPage =
-    Math.min(
-      totalPages,
-      startPage + 5
-    );
-
   const row = [
     {
       text:
-        "ㅤJUMP →ㅤ",
+        "ᴶᵁᴹᴾ",
       callback_data:
         "bankai_library_jump_label"
     }
   ];
+
+  let startPage =
+    Math.max(
+      1,
+      page - 2
+    );
+
+  let endPage =
+    Math.min(
+      totalPages,
+      startPage + 4
+    );
+
+  if (
+    endPage - startPage < 4
+  ) {
+
+    startPage =
+      Math.max(
+        1,
+        endPage - 4
+      );
+  }
 
   for (
     let pnum = startPage;
@@ -319,18 +321,22 @@ function buildLibraryJumpButtons(
     pnum++
   ) {
 
-    row.push({
-      text:
-        pnum === page
-          ? active[
-              pnum -
-              startPage
-            ]
-          : normal[
-              pnum -
-              startPage
-            ],
+    const display =
+      pnum === page
+        ? String(pnum)
+            .replace("1","❶")
+            .replace("2","❷")
+            .replace("3","❸")
+            .replace("4","❹")
+            .replace("5","❺")
+            .replace("6","❻")
+            .replace("7","❼")
+            .replace("8","❽")
+            .replace("9","❾")
+        : `ㅤ${pnum}ㅤ`;
 
+    row.push({
+      text: display,
       callback_data:
         `bankai_library_page_${nodeId}_${pnum}`
     });
