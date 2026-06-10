@@ -727,13 +727,79 @@ NO = 1, 2, 3`
             paddingLength
           );
 
+        adminState[chatId] = {
+          action:
+            "auto_node_confirm",
+          parentNodeId:
+            state.parentNodeId,
+          prefix:
+            state.prefix,
+          endNumber:
+            state.endNumber,
+          paddingLength,
+          createdAt:
+            Date.now()
+        };
+
         await sendMessage(
           chatId,
 `Preview
 
 ${preview}
 
-Total Nodes : ${state.endNumber}`
+Total Nodes : ${state.endNumber}
+
+Type CREATE to continue
+Type CANCEL to abort`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+
+      if (
+        state &&
+        state.action ===
+          "auto_node_confirm"
+      ) {
+
+        const answer =
+          text.trim()
+            .toUpperCase();
+
+        if (
+          answer === "CANCEL"
+        ) {
+
+          delete adminState[
+            chatId
+          ];
+
+          await sendMessage(
+            chatId,
+            "❌ Cancelled."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        if (
+          answer !== "CREATE"
+        ) {
+
+          await sendMessage(
+            chatId,
+            "Type CREATE or CANCEL"
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await sendMessage(
+          chatId,
+          "🚀 Creating nodes..."
         );
 
         delete adminState[
@@ -742,7 +808,6 @@ Total Nodes : ${state.endNumber}`
 
         return res.sendStatus(200);
       }
-
 
 
       const nodeAction =
