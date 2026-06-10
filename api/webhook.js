@@ -3560,13 +3560,102 @@ if (
         )
       ) {
 
+        const state =
+          adminState[
+            query.message.chat.id
+          ];
+
+        if (
+          !state ||
+          state.action !==
+            "auto_node_confirm"
+        ) {
+
+          return res.sendStatus(200);
+        }
+
+        const lastNode =
+          await db.nodes.find({
+            parent_id:
+              state.parentNodeId
+          })
+          .sort({
+            position: -1
+          })
+          .limit(1)
+          .toArray();
+
+        let position =
+          lastNode.length
+            ? lastNode[0].position + 1
+            : 1;
+
+        for (
+          let i = 1;
+          i <= state.endNumber;
+          i++
+        ) {
+
+          const publicId =
+            await getNextNodeId(db);
+
+          const nodeName =
+            formatAutoNodeName(
+              state.prefix,
+              i,
+              state.paddingLength
+            );
+
+          await db.nodes.insertOne({
+            public_id: publicId,
+            name: nodeName,
+            parent_id:
+              state.parentNodeId,
+            position,
+            description: "",
+            poster_file_id: null,
+            custom_sort_character: null,
+            is_trashed: false,
+            created_at:
+              new Date(),
+            updated_at:
+              new Date()
+          });
+
+          position++;
+        }
+
+        delete adminState[
+          query.message.chat.id
+        ];
+
         await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/answerCallbackQuery`,
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
-            callback_query_id:
-              query.id,
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
             text:
-              "Use CREATE in chat for now"
+`✅ Auto Nodes Created
+
+Prefix :
+${state.prefix}
+
+Created :
+${state.endNumber}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "🏡 HOME",
+                    callback_data:
+                      "bankai_library"
+                  }
+                ]
+              ]
+            }
           }
         );
 
