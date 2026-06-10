@@ -2754,6 +2754,69 @@ if (
             ""
           );
 
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`Choose Mode`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "ㅤBASICㅤ",
+                    callback_data:
+                      `create_basic_${parentNodeId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "ㅤPOWERFULㅤ❖ㅤAUTOMATEDㅤ",
+                    callback_data:
+                      `create_powerful_${parentNodeId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "🔙  BACK",
+                    callback_data:
+                      `lib_open_${parentNodeId}`
+                  },
+                  {
+                    text:
+                      "✖️  CLOSE",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "create_basic_"
+        )
+      ) {
+
+        const parentNodeId =
+          query.data.replace(
+            "create_basic_",
+            ""
+          );
+
         adminState[
           query.message.chat.id
         ] = {
@@ -2775,9 +2838,16 @@ if (
               inline_keyboard: [
                 [
                   {
-                    text: "❌ Cancel",
+                    text:
+                      "🔙  BACK",
                     callback_data:
-                      "bankai_library"
+                      `admin_create_${parentNodeId}`
+                  },
+                  {
+                    text:
+                      "✖️  CLOSE",
+                    callback_data:
+                      "close_search"
                   }
                 ]
               ]
@@ -2788,6 +2858,69 @@ if (
         return res.sendStatus(200);
       }
 
+
+
+if (
+        query.data.startsWith(
+          "create_powerful_"
+        )
+      ) {
+
+        const parentNodeId =
+          query.data.replace(
+            "create_powerful_",
+            ""
+          );
+
+        adminState[
+          query.message.chat.id
+        ] = {
+          action:
+            "auto_node_prefix",
+          parentNodeId,
+          createdAt: Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`Node Prefix ?
+
+Examples :
+
+Episode
+OVA
+Movie
+Season
+Part`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "🔙  BACK",
+                    callback_data:
+                      `admin_create_${parentNodeId}`
+                  },
+                  {
+                    text:
+                      "✖️  CLOSE",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
 
 
 if (query.data.startsWith("lib_open_")) {
