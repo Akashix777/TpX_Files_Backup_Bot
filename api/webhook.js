@@ -4237,13 +4237,6 @@ if (
             query.message.chat.id
           ];
 
-        await sendMessage(
-          query.message.chat.id,
-          `DEBUG
-State: ${!!state}
-Files: ${state?.files?.length || 0}`
-        );
-
         if (
           !state ||
           !state.files.length
