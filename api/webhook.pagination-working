@@ -276,71 +276,6 @@ function getLibraryTotalPages(
 
 
 
-
-function buildLibraryJumpButtons(
-  nodeId,
-  page,
-  totalPages
-) {
-
-  const normal =
-    ["①","②","③","④","⑤","⑥"];
-
-  const active =
-    ["❶","❷","❸","❹","❺","❻"];
-
-  let startPage =
-    Math.max(
-      1,
-      Math.min(
-        page - 2,
-        totalPages - 5
-      )
-    );
-
-  const endPage =
-    Math.min(
-      totalPages,
-      startPage + 5
-    );
-
-  const row = [
-    {
-      text:
-        "ㅤJUMP →ㅤ",
-      callback_data:
-        "bankai_library_jump_label"
-    }
-  ];
-
-  for (
-    let pnum = startPage;
-    pnum <= endPage;
-    pnum++
-  ) {
-
-    row.push({
-      text:
-        pnum === page
-          ? active[
-              pnum -
-              startPage
-            ]
-          : normal[
-              pnum -
-              startPage
-            ],
-
-      callback_data:
-        `bankai_library_page_${nodeId}_${pnum}`
-    });
-  }
-
-  return row;
-}
-
-
-
 function buildAutoNodePreview(
   prefix,
   endNumber,
@@ -550,13 +485,14 @@ async function renderLibraryNode(
     }
   ]);
 
-  buttons.push(
-    buildLibraryJumpButtons(
-      node.public_id,
-      page,
-      totalPages
-    )
-  );
+  buttons.push([
+    {
+      text:
+        "ㅤJUMP →ㅤ",
+      callback_data:
+        "bankai_library_jump_label"
+    }
+  ]);
 
   buttons.push([
     {
@@ -4066,37 +4002,6 @@ ${state.endNumber}`,
               ]
             }
           }
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-
-if (
-        query.data.startsWith(
-          "bankai_library_page_"
-        )
-      ) {
-
-        const parts =
-          query.data.split("_");
-
-        const page =
-          Number(
-            parts.pop()
-          );
-
-        const nodeId =
-          parts.pop();
-
-        await renderLibraryNode(
-          db,
-          query.message.chat.id,
-          query.message.message_id,
-          nodeId,
-          page
         );
 
         return res.sendStatus(200);
