@@ -2848,13 +2848,13 @@ Get All
                     text:
                       "🔙  BACK",
                     callback_data:
-                      `create_basic_back_${parentNodeId}`
+                      `basic_back_${parentNodeId}`
                   },
                   {
                     text:
                       "❎  CANCEL",
                     callback_data:
-                      `create_basic_cancel_${parentNodeId}`
+                      `basic_cancel_${parentNodeId}`
                   },
                   {
                     text:
@@ -2918,13 +2918,13 @@ Part`,
                     text:
                       "🔙  BACK",
                     callback_data:
-                      `create_basic_back_${parentNodeId}`
+                      `basic_back_${parentNodeId}`
                   },
                   {
                     text:
                       "❎  CANCEL",
                     callback_data:
-                      `create_basic_cancel_${parentNodeId}`
+                      `basic_cancel_${parentNodeId}`
                   },
                   {
                     text:
@@ -2944,13 +2944,13 @@ Part`,
 
 if (
         query.data.startsWith(
-          "create_basic_back_"
+          "basic_back_"
         )
       ) {
 
         const parentNodeId =
           query.data.replace(
-            "create_basic_back_",
+            "basic_back_",
             ""
           );
 
@@ -3016,7 +3016,7 @@ if (
 
 if (
         query.data.startsWith(
-          "create_basic_cancel_"
+          "basic_cancel_"
         )
       ) {
 
