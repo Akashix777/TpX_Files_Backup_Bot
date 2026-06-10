@@ -2958,6 +2958,11 @@ if (
           query.message.chat.id
         ];
 
+        await sendMessage(
+          query.message.chat.id,
+          "BACK PRESSED"
+        );
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
