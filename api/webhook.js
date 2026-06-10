@@ -219,6 +219,100 @@ async function normalizeAttachmentPositions(
 }
 
 
+
+
+function formatAutoNodeName(
+  prefix,
+  number,
+  paddingLength
+) {
+
+  const value =
+    paddingLength > 0
+      ? String(number).padStart(
+          paddingLength,
+          "0"
+        )
+      : String(number);
+
+  return `${prefix}  –  ${value}`;
+}
+
+
+
+function buildAutoNodePreview(
+  prefix,
+  endNumber,
+  paddingLength
+) {
+
+  const lines = [];
+
+  const head =
+    Math.min(
+      4,
+      endNumber
+    );
+
+  for (
+    let i = 1;
+    i <= head;
+    i++
+  ) {
+
+    lines.push(
+      formatAutoNodeName(
+        prefix,
+        i,
+        paddingLength
+      )
+    );
+  }
+
+  if (endNumber > 6) {
+
+    lines.push("");
+    lines.push("...");
+    lines.push("");
+
+    lines.push(
+      formatAutoNodeName(
+        prefix,
+        endNumber - 1,
+        paddingLength
+      )
+    );
+
+    lines.push(
+      formatAutoNodeName(
+        prefix,
+        endNumber,
+        paddingLength
+      )
+    );
+
+  } else {
+
+    for (
+      let i = head + 1;
+      i <= endNumber;
+      i++
+    ) {
+
+      lines.push(
+        formatAutoNodeName(
+          prefix,
+          i,
+          paddingLength
+        )
+      );
+    }
+  }
+
+  return lines.join("\n");
+}
+
+
 async function renderLibraryRoot(
   db,
   chatId,
@@ -570,20 +664,26 @@ Examples :
           return res.sendStatus(200);
         }
 
+        adminState[chatId] = {
+          action:
+            "auto_node_padding",
+          parentNodeId:
+            state.parentNodeId,
+          prefix:
+            state.prefix,
+          endNumber,
+          createdAt:
+            Date.now()
+        };
+
         await sendMessage(
           chatId,
-`✅ Test Success
+`Padding ?
 
-Prefix :
-${state.prefix}
+YES = 001, 002, 003
 
-End :
-${endNumber}`
+NO = 1, 2, 3`
         );
-
-        delete adminState[
-          chatId
-        ];
 
         return res.sendStatus(200);
       }
