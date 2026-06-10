@@ -538,7 +538,7 @@ async function renderLibraryNode(
     child => [{
       text: child.name,
       callback_data:
-        `lib_open_${child.public_id}_${node.public_id}_${page}`
+        `lib_open_${child.public_id}`
     }]
   );
 
