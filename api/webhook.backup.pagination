@@ -364,13 +364,63 @@ async function renderLibraryRoot(
       name: 1
     }).toArray();
 
-  const buttons = children.map(
+  const totalPages =
+    getLibraryTotalPages(
+      children.length
+    );
+
+  page = Math.max(
+    1,
+    Math.min(
+      page,
+      totalPages
+    )
+  );
+
+  const pageChildren =
+    getPageSlice(
+      children,
+      page
+    );
+
+  const buttons =
+    pageChildren.map(
     node => [{
       text: node.name,
       callback_data:
         `lib_open_${node.public_id}`
     }]
   );
+
+  buttons.push([
+    {
+      text:
+        "❮",
+      callback_data:
+        `bankai_library_prev_${node.public_id}_${page}`
+    },
+    {
+      text:
+        `${page}/${totalPages}`,
+      callback_data:
+        "bankai_library_page_label"
+    },
+    {
+      text:
+        "❯",
+      callback_data:
+        `bankai_library_next_${node.public_id}_${page}`
+    }
+  ]);
+
+  buttons.push([
+    {
+      text:
+        "ㅤJUMP →ㅤ",
+      callback_data:
+        "bankai_library_jump_label"
+    }
+  ]);
 
   buttons.push([
     {
