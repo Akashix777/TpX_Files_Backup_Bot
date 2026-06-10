@@ -690,6 +690,61 @@ NO = 1, 2, 3`
 
 
 
+      if (
+        state &&
+        state.action ===
+          "auto_node_padding"
+      ) {
+
+        const answer =
+          text.trim()
+            .toUpperCase();
+
+        if (
+          answer !== "YES" &&
+          answer !== "NO"
+        ) {
+
+          await sendMessage(
+            chatId,
+            "Type YES or NO"
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const paddingLength =
+          answer === "YES"
+            ? String(
+                state.endNumber
+              ).length
+            : 0;
+
+        const preview =
+          buildAutoNodePreview(
+            state.prefix,
+            state.endNumber,
+            paddingLength
+          );
+
+        await sendMessage(
+          chatId,
+`Preview
+
+${preview}
+
+Total Nodes : ${state.endNumber}`
+        );
+
+        delete adminState[
+          chatId
+        ];
+
+        return res.sendStatus(200);
+      }
+
+
+
       const nodeAction =
         nodeActionState[chatId];
 
