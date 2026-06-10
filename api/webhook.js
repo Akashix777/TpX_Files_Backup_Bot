@@ -797,14 +797,71 @@ Type CANCEL to abort`
           return res.sendStatus(200);
         }
 
-        await sendMessage(
-          chatId,
-          "🚀 Creating nodes..."
-        );
+        const lastNode =
+          await db.nodes.find({
+            parent_id:
+              state.parentNodeId
+          })
+          .sort({
+            position: -1
+          })
+          .limit(1)
+          .toArray();
+
+        let position =
+          lastNode.length
+            ? lastNode[0].position + 1
+            : 1;
+
+        for (
+          let i = 1;
+          i <= state.endNumber;
+          i++
+        ) {
+
+          const publicId =
+            await getNextNodeId(db);
+
+          const nodeName =
+            formatAutoNodeName(
+              state.prefix,
+              i,
+              state.paddingLength
+            );
+
+          await db.nodes.insertOne({
+            public_id: publicId,
+            name: nodeName,
+            parent_id:
+              state.parentNodeId,
+            position,
+            description: "",
+            poster_file_id: null,
+            custom_sort_character: null,
+            is_trashed: false,
+            created_at:
+              new Date(),
+            updated_at:
+              new Date()
+          });
+
+          position++;
+        }
 
         delete adminState[
           chatId
         ];
+
+        await sendMessage(
+          chatId,
+`✅ Auto Nodes Created
+
+Prefix :
+${state.prefix}
+
+Created :
+${state.endNumber}`
+        );
 
         return res.sendStatus(200);
       }
