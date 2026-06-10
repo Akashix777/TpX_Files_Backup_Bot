@@ -538,7 +538,7 @@ async function renderLibraryNode(
     child => [{
       text: child.name,
       callback_data:
-        `lib_open_${child.public_id}`
+        `lib_open_${child.public_id}_${node.public_id}_${page}`
     }]
   );
 
@@ -595,7 +595,7 @@ async function renderLibraryNode(
       {
         text: "⬅ BACK",
         callback_data:
-          `lib_back_${node.parent_id}`
+          `lib_back_${node.parent_id}_${page}`
       },
       {
         text: "❌ CLOSE",
@@ -610,7 +610,7 @@ async function renderLibraryNode(
       {
         text: "⬅ BACK",
         callback_data:
-          `lib_back_${node.parent_id}`
+          `lib_back_${node.parent_id}_${page}`
       },
       {
         text: "🏡 N-HOME",
@@ -4199,11 +4199,19 @@ if (
 
 if (query.data.startsWith("lib_back_")) {
 
-        const parentId =
+        const parts =
           query.data.replace(
             "lib_back_",
             ""
+          ).split("_");
+
+        const page =
+          Number(
+            parts.pop()
           );
+
+        const parentId =
+          parts.join("_");
 
         if (parentId === "ROOT") {
 
@@ -4219,7 +4227,8 @@ if (query.data.startsWith("lib_back_")) {
             db,
             query.message.chat.id,
             query.message.message_id,
-            parentId
+            parentId,
+            page
           );
         }
 
