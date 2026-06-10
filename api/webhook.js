@@ -682,7 +682,32 @@ Examples :
 
 YES = DYNAMIC : 001, 002, 003
 
-NO = 1, 2, 3`
+NO = 1, 2, 3`,
+          {
+            inline_keyboard: [
+              [
+                {
+                  text: "✅ YES",
+                  callback_data:
+                    `auto_padding_yes_${chatId}`
+                }
+              ],
+              [
+                {
+                  text: "❌ NO",
+                  callback_data:
+                    `auto_padding_no_${chatId}`
+                }
+              ],
+              [
+                {
+                  text: "❌ CLOSE",
+                  callback_data:
+                    "close_search"
+                }
+              ]
+            ]
+          }
         );
 
         return res.sendStatus(200);
@@ -3588,7 +3613,234 @@ NO = 1, 2, 3`,
               inline_keyboard: [
                 [
                   {
+                    text: "✅ YES",
+                    callback_data:
+                      `auto_padding_yes_${query.message.chat.id}`
+                  }
+                ],
+                [
+                  {
+                    text: "❌ NO",
+                    callback_data:
+                      `auto_padding_no_${query.message.chat.id}`
+                  }
+                ],
+                [
+                  {
                     text: "❌ CLOSE",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+
+
+if (
+        query.data.startsWith(
+          "auto_padding_yes_"
+        )
+      ) {
+
+        const state =
+          adminState[
+            query.message.chat.id
+          ];
+
+        if (
+          !state ||
+          state.action !==
+            "auto_node_padding"
+        ) {
+
+          return res.sendStatus(200);
+        }
+
+        const paddingLength =
+          String(
+            state.endNumber
+          ).length;
+
+        const preview =
+          buildAutoNodePreview(
+            state.prefix,
+            state.endNumber,
+            paddingLength
+          );
+
+        adminState[
+          query.message.chat.id
+        ] = {
+          action:
+            "auto_node_confirm",
+          parentNodeId:
+            state.parentNodeId,
+          prefix:
+            state.prefix,
+          endNumber:
+            state.endNumber,
+          paddingLength,
+          backPrefix:
+            state.prefix,
+          backEndNumber:
+            state.endNumber,
+          createdAt:
+            Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`Preview
+
+${preview}
+
+Total Nodes : ${state.endNumber}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "✅ CREATE",
+                    callback_data:
+                      `auto_create_confirm_${query.message.chat.id}`
+                  },
+                  {
+                    text:
+                      "🔙 BACK",
+                    callback_data:
+                      `auto_create_back_${query.message.chat.id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❎ CANCEL",
+                    callback_data:
+                      `auto_create_cancel_${query.message.chat.id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❌ CLOSE",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "auto_padding_no_"
+        )
+      ) {
+
+        const state =
+          adminState[
+            query.message.chat.id
+          ];
+
+        if (
+          !state ||
+          state.action !==
+            "auto_node_padding"
+        ) {
+
+          return res.sendStatus(200);
+        }
+
+        const paddingLength = 0;
+
+        const preview =
+          buildAutoNodePreview(
+            state.prefix,
+            state.endNumber,
+            paddingLength
+          );
+
+        adminState[
+          query.message.chat.id
+        ] = {
+          action:
+            "auto_node_confirm",
+          parentNodeId:
+            state.parentNodeId,
+          prefix:
+            state.prefix,
+          endNumber:
+            state.endNumber,
+          paddingLength,
+          backPrefix:
+            state.prefix,
+          backEndNumber:
+            state.endNumber,
+          createdAt:
+            Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`Preview
+
+${preview}
+
+Total Nodes : ${state.endNumber}`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "✅ CREATE",
+                    callback_data:
+                      `auto_create_confirm_${query.message.chat.id}`
+                  },
+                  {
+                    text:
+                      "🔙 BACK",
+                    callback_data:
+                      `auto_create_back_${query.message.chat.id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❎ CANCEL",
+                    callback_data:
+                      `auto_create_cancel_${query.message.chat.id}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❌ CLOSE",
                     callback_data:
                       "close_search"
                   }
