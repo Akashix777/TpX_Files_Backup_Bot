@@ -324,15 +324,22 @@ function buildLibraryJumpButtons(
     const display =
       pnum === page
         ? String(pnum)
-            .replace("1","❶")
-            .replace("2","❷")
-            .replace("3","❸")
-            .replace("4","❹")
-            .replace("5","❺")
-            .replace("6","❻")
-            .replace("7","❼")
-            .replace("8","❽")
-            .replace("9","❾")
+            .split("")
+            .map(
+              d => ({
+                "0":"⓿",
+                "1":"❶",
+                "2":"❷",
+                "3":"❸",
+                "4":"❹",
+                "5":"❺",
+                "6":"❻",
+                "7":"❼",
+                "8":"❽",
+                "9":"❾"
+              })[d]
+            )
+            .join("")
         : `ㅤ${pnum}ㅤ`;
 
     row.push({
