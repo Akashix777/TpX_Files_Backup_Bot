@@ -474,6 +474,122 @@ app.post("/webhook", async (req, res) => {
 
 
 
+
+      if (
+        state &&
+        state.action ===
+          "auto_node_prefix"
+      ) {
+
+        if (
+          Date.now() - state.createdAt >
+          180000
+        ) {
+
+          delete adminState[chatId];
+
+          await sendMessage(
+            chatId,
+            "❌ Action timed out."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const prefix =
+          text.trim();
+
+        if (!prefix) {
+          return res.sendStatus(200);
+        }
+
+        adminState[chatId] = {
+          action:
+            "auto_node_end",
+          parentNodeId:
+            state.parentNodeId,
+          prefix,
+          createdAt:
+            Date.now()
+        };
+
+        await sendMessage(
+          chatId,
+`Ending Number ?
+
+Examples :
+
+12
+99
+366
+1000`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+      if (
+        state &&
+        state.action ===
+          "auto_node_end"
+      ) {
+
+        if (
+          Date.now() - state.createdAt >
+          180000
+        ) {
+
+          delete adminState[chatId];
+
+          await sendMessage(
+            chatId,
+            "❌ Action timed out."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const endNumber =
+          Number(text.trim());
+
+        if (
+          !Number.isInteger(
+            endNumber
+          ) ||
+          endNumber < 1 ||
+          endNumber > 10000
+        ) {
+
+          await sendMessage(
+            chatId,
+            "❌ Enter a number between 1 and 10000."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await sendMessage(
+          chatId,
+`✅ Test Success
+
+Prefix :
+${state.prefix}
+
+End :
+${endNumber}`
+        );
+
+        delete adminState[
+          chatId
+        ];
+
+        return res.sendStatus(200);
+      }
+
+
+
       const nodeAction =
         nodeActionState[chatId];
 
