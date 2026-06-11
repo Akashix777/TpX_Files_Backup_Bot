@@ -4126,12 +4126,23 @@ if (query.data.startsWith("lib_open_")) {
             ""
           );
 
-        await renderLibraryNode(
-          db,
-          query.message.chat.id,
-          query.message.message_id,
-          publicId
-        );
+        if (publicId === "ROOT") {
+
+          await renderLibraryRoot(
+            db,
+            query.message.chat.id,
+            query.message.message_id
+          );
+
+        } else {
+
+          await renderLibraryNode(
+            db,
+            query.message.chat.id,
+            query.message.message_id,
+            publicId
+          );
+        }
 
         return res.sendStatus(200);
       }
