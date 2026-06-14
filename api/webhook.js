@@ -4476,6 +4476,14 @@ if (
                 [
                   {
                     text:
+                      "🗑 Remove Poster",
+                    callback_data:
+                      `remove_poster_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
                       "⬆⬇ Reorder Node",
                     callback_data:
                       `reorder_node_${publicId}`
@@ -5984,6 +5992,41 @@ Affected Nodes : ${affectedCount}`,
               ]
             }
           }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "remove_poster_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "remove_poster_",
+            ""
+          );
+
+        await db.nodes.updateOne(
+          {
+            public_id: publicId
+          },
+          {
+            $set: {
+              poster_file_id: null,
+              poster_media_type: null,
+              updated_at: new Date()
+            }
+          }
+        );
+
+        await sendMessage(
+          query.message.chat.id,
+          "✅ Poster Removed"
         );
 
         return res.sendStatus(200);
