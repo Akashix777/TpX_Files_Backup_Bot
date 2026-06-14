@@ -538,7 +538,7 @@ async function renderLibraryNode(
     child => [{
       text: child.name,
       callback_data:
-        `lib_open_${child.public_id}`
+        `lib_open_${child.public_id}_${node.public_id}_${page}`
     }]
   );
 
@@ -1116,6 +1116,67 @@ ${node.name}
 
 New:
 ${newName}`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+      if (
+        nodeAction &&
+        nodeAction.action ===
+          "edit_description"
+      ) {
+
+        const description =
+          text.trim();
+
+        const node =
+          await db.nodes.findOne({
+            public_id:
+              nodeAction.publicId,
+            is_trashed: false
+          });
+
+        if (!node) {
+
+          nodeActionState[
+            chatId
+          ] = null;
+
+          await sendMessage(
+            chatId,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await db.nodes.updateOne(
+          {
+            public_id:
+              nodeAction.publicId
+          },
+          {
+            $set: {
+              description,
+              updated_at:
+                new Date()
+            }
+          }
+        );
+
+        nodeActionState[
+          chatId
+        ] = null;
+
+        await sendMessage(
+          chatId,
+`✅ Description Updated
+
+Node:
+${node.name}`
         );
 
         return res.sendStatus(200);
@@ -4120,11 +4181,14 @@ if (
 
 if (query.data.startsWith("lib_open_")) {
 
-        const publicId =
+        const parts =
           query.data.replace(
             "lib_open_",
             ""
-          );
+          ).split("_");
+
+        const publicId =
+          parts[0];
 
         if (publicId === "ROOT") {
 
@@ -4302,6 +4366,14 @@ if (
                       "✏ Rename Node",
                     callback_data:
                       `rename_node_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "📝 Edit Description",
+                    callback_data:
+                      `description_node_${publicId}`
                   }
                 ],
                 [
@@ -5810,6 +5882,56 @@ Affected Nodes : ${affectedCount}`,
                       "❌ CLOSE",
                     callback_data:
                       "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "description_node_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "description_node_",
+            ""
+          );
+
+        nodeActionState[
+          query.message.chat.id
+        ] = {
+          action:
+            "edit_description",
+          publicId,
+          createdAt: Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+              "📝 Send new description",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `node_actions_${publicId}`
                   }
                 ]
               ]
