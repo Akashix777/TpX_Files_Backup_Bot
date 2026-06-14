@@ -632,7 +632,13 @@ async function renderLibraryNode(
       chat_id: chatId,
       message_id: messageId,
       text:
-        `ROOT > ${node.name}
+        `ROOT > ${node.name}${
+          node.description
+            ? `
+
+${node.description}`
+            : ""
+        }
 
 Page ${page}/${totalPages}`,
       reply_markup: {
