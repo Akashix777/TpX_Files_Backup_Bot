@@ -448,6 +448,29 @@ Page ${page}/${totalPages}`;
 }
 
 
+async function renderLibraryMessage(
+  chatId,
+  messageId,
+  text,
+  buttons
+) {
+
+  await axios.post(
+    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+    {
+      chat_id: chatId,
+      message_id: messageId,
+      text,
+      reply_markup: {
+        inline_keyboard:
+          buttons
+      }
+    }
+  );
+}
+
+
+
 
 async function renderLibraryRoot(
   db,
@@ -493,18 +516,11 @@ async function renderLibraryRoot(
     }
   ]);
 
-  await axios.post(
-    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-    {
-      chat_id: chatId,
-      message_id: messageId,
-      text:
-        "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
-      reply_markup: {
-        inline_keyboard:
-          buttons
-      }
-    }
+  await renderLibraryMessage(
+    chatId,
+    messageId,
+    "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+    buttons
   );
 }
 
@@ -648,22 +664,15 @@ async function renderLibraryNode(
 
   }
 
-  await axios.post(
-    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-    {
-      chat_id: chatId,
-      message_id: messageId,
-      text:
-        buildNodeText(
-          node,
-          page,
-          totalPages
-        ),
-      reply_markup: {
-        inline_keyboard:
-          buttons
-      }
-    }
+  await renderLibraryMessage(
+    chatId,
+    messageId,
+    buildNodeText(
+      node,
+      page,
+      totalPages
+    ),
+    buttons
   );
 }
 
