@@ -33,10 +33,13 @@ const nodeActionState = {};
 
 const nodeFilesState = {};
 
+const nodePosterState = {};
+
 function clearAdminStates(chatId) {
 
   nodeActionState[chatId] = null;
   nodeFilesState[chatId] = null;
+  nodePosterState[chatId] = null;
 
   uploadMode[chatId] = false;
   uploadType[chatId] = null;
@@ -142,6 +145,7 @@ async function ensureRootNode(db) {
     position: 0,
     description: "",
     poster_file_id: null,
+    poster_media_type: null,
     custom_sort_character: null,
     is_trashed: false,
     created_at: new Date(),
