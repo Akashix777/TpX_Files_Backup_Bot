@@ -472,6 +472,57 @@ async function renderLibraryMessage(
 
 
 
+
+async function sendNodePoster(
+  chatId,
+  node,
+  caption
+) {
+
+  let method =
+    "sendPhoto";
+
+  const payload = {
+    chat_id: chatId,
+    caption
+  };
+
+  if (
+    node.poster_media_type ===
+    "video"
+  ) {
+
+    method =
+      "sendVideo";
+
+    payload.video =
+      node.poster_file_id;
+  }
+
+  else if (
+    node.poster_media_type ===
+    "animation"
+  ) {
+
+    method =
+      "sendAnimation";
+
+    payload.animation =
+      node.poster_file_id;
+  }
+
+  else {
+
+    payload.photo =
+      node.poster_file_id;
+  }
+
+  return axios.post(
+    `https://api.telegram.org/bot${TOKEN}/${method}`,
+    payload
+  );
+}
+
 async function renderLibraryRoot(
   db,
   chatId,
@@ -6060,49 +6111,10 @@ if (
           return res.sendStatus(200);
         }
 
-        let method =
-          "sendPhoto";
-
-        let payload = {
-          chat_id:
-            query.message.chat.id,
-          caption:
-            `🎴 ${node.name}`
-        };
-
-        if (
-          node.poster_media_type ===
-          "video"
-        ) {
-
-          method =
-            "sendVideo";
-
-          payload.video =
-            node.poster_file_id;
-        }
-
-        else if (
-          node.poster_media_type ===
-          "animation"
-        ) {
-
-          method =
-            "sendAnimation";
-
-          payload.animation =
-            node.poster_file_id;
-        }
-
-        else {
-
-          payload.photo =
-            node.poster_file_id;
-        }
-
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/${method}`,
-          payload
+        await sendNodePoster(
+          query.message.chat.id,
+          node,
+          `🎴 ${node.name}`
         );
 
         return res.sendStatus(200);
