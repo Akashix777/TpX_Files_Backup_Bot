@@ -630,88 +630,25 @@ async function renderLibraryNode(
 
   }
 
-  const caption =
-    `ROOT > ${node.name}${
-      node.description
-        ? `
-
-${node.description}`
-        : ""
-    }
-
-Page ${page}/${totalPages}`;
-
-  const replyMarkup = {
-    inline_keyboard:
-      buttons
-  };
-
-  if (node.poster_file_id) {
-
-    let method = "sendPhoto";
-
-    const payload = {
-      chat_id: chatId,
-      reply_markup: replyMarkup,
-      caption
-    };
-
-    if (
-      node.poster_media_type ===
-      "video"
-    ) {
-
-      method = "sendVideo";
-
-      payload.video =
-        node.poster_file_id;
-    }
-
-    else if (
-      node.poster_media_type ===
-      "animation"
-    ) {
-
-      method =
-        "sendAnimation";
-
-      payload.animation =
-        node.poster_file_id;
-    }
-
-    else {
-
-      payload.photo =
-        node.poster_file_id;
-    }
-
-    try {
-
-      await axios.post(
-        `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
-        {
-          chat_id: chatId,
-          message_id: messageId
-        }
-      );
-
-    } catch {}
-
-    await axios.post(
-      `https://api.telegram.org/bot${TOKEN}/${method}`,
-      payload
-    );
-
-    return;
-  }
-
   await axios.post(
     `https://api.telegram.org/bot${TOKEN}/editMessageText`,
     {
       chat_id: chatId,
       message_id: messageId,
-      text: caption,
-      reply_markup: replyMarkup
+      text:
+        `ROOT > ${node.name}${
+          node.description
+            ? `
+
+${node.description}`
+            : ""
+        }
+
+Page ${page}/${totalPages}`,
+      reply_markup: {
+        inline_keyboard:
+          buttons
+      }
     }
   );
 }
