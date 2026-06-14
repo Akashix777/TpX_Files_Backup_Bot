@@ -456,6 +456,18 @@ async function renderLibraryMessage(
   node = null
 ) {
 
+  if (
+    node &&
+    node.poster_file_id
+  ) {
+
+    console.log(
+      "POSTER NODE:",
+      node.name,
+      node.poster_media_type
+    );
+  }
+
   await axios.post(
     `https://api.telegram.org/bot${TOKEN}/editMessageText`,
     {
