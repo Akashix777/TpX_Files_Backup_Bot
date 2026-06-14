@@ -4476,6 +4476,14 @@ if (
                 [
                   {
                     text:
+                      "👁 View Poster",
+                    callback_data:
+                      `view_poster_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
                       "🗑 Remove Poster",
                     callback_data:
                       `remove_poster_${publicId}`
@@ -5992,6 +6000,86 @@ Affected Nodes : ${affectedCount}`,
               ]
             }
           }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "view_poster_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "view_poster_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId
+          });
+
+        if (
+          !node ||
+          !node.poster_file_id
+        ) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ No poster set."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        let method =
+          "sendPhoto";
+
+        let payload = {
+          chat_id:
+            query.message.chat.id,
+          caption:
+            `🎴 ${node.name}`
+        };
+
+        if (
+          node.poster_media_type ===
+          "video"
+        ) {
+
+          method =
+            "sendVideo";
+
+          payload.video =
+            node.poster_file_id;
+        }
+
+        else if (
+          node.poster_media_type ===
+          "animation"
+        ) {
+
+          method =
+            "sendAnimation";
+
+          payload.animation =
+            node.poster_file_id;
+        }
+
+        else {
+
+          payload.photo =
+            node.poster_file_id;
+        }
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/${method}`,
+          payload
         );
 
         return res.sendStatus(200);
