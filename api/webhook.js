@@ -1194,6 +1194,85 @@ ${node.name}`
 
 
 
+      const posterState =
+        nodePosterState[chatId];
+
+      if (
+        posterState &&
+        String(chatId) ===
+          String(ADMIN_ID)
+      ) {
+
+        let posterFileId = null;
+        let posterMediaType = null;
+
+        if (msg.photo) {
+
+          const photo =
+            msg.photo[
+              msg.photo.length - 1
+            ];
+
+          posterFileId =
+            photo.file_id;
+
+          posterMediaType =
+            "photo";
+        }
+
+        else if (msg.video) {
+
+          posterFileId =
+            msg.video.file_id;
+
+          posterMediaType =
+            "video";
+        }
+
+        else if (msg.animation) {
+
+          posterFileId =
+            msg.animation.file_id;
+
+          posterMediaType =
+            "animation";
+        }
+
+        if (!posterFileId) {
+          return res.sendStatus(200);
+        }
+
+        await db.nodes.updateOne(
+          {
+            public_id:
+              posterState.publicId
+          },
+          {
+            $set: {
+              poster_file_id:
+                posterFileId,
+              poster_media_type:
+                posterMediaType,
+              updated_at:
+                new Date()
+            }
+          }
+        );
+
+        nodePosterState[
+          chatId
+        ] = null;
+
+        await sendMessage(
+          chatId,
+          "✅ Poster Updated"
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
       const existingUser =
         await db.users.findOne({
           chat_id: chatId
@@ -4389,6 +4468,14 @@ if (
                 [
                   {
                     text:
+                      "🎴 Set Poster",
+                    callback_data:
+                      `set_poster_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
                       "⬆⬇ Reorder Node",
                     callback_data:
                       `reorder_node_${publicId}`
@@ -5892,6 +5979,62 @@ Affected Nodes : ${affectedCount}`,
                       "❌ CLOSE",
                     callback_data:
                       "close_search"
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "set_poster_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "set_poster_",
+            ""
+          );
+
+        nodePosterState[
+          query.message.chat.id
+        ] = {
+          publicId,
+          createdAt: Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`🎴 Set Poster
+
+Send:
+
+• Photo
+• Video
+• GIF
+
+Poster will replace existing one.`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `node_actions_${publicId}`
                   }
                 ]
               ]
