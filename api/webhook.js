@@ -430,6 +430,24 @@ function buildAutoNodePreview(
   return lines.join("\n");
 }
 
+function buildNodeText(
+  node,
+  page,
+  totalPages
+) {
+
+  return `ROOT > ${node.name}${
+    node.description
+      ? `
+
+${node.description}`
+      : ""
+  }
+
+Page ${page}/${totalPages}`;
+}
+
+
 
 async function renderLibraryRoot(
   db,
@@ -636,15 +654,11 @@ async function renderLibraryNode(
       chat_id: chatId,
       message_id: messageId,
       text:
-        `ROOT > ${node.name}${
-          node.description
-            ? `
-
-${node.description}`
-            : ""
-        }
-
-Page ${page}/${totalPages}`,
+        buildNodeText(
+          node,
+          page,
+          totalPages
+        ),
       reply_markup: {
         inline_keyboard:
           buttons
