@@ -452,7 +452,8 @@ async function renderLibraryMessage(
   chatId,
   messageId,
   text,
-  buttons
+  buttons,
+  node = null
 ) {
 
   await axios.post(
@@ -723,7 +724,8 @@ async function renderLibraryNode(
       page,
       totalPages
     ),
-    buttons
+    buttons,
+    node
   );
 }
 
