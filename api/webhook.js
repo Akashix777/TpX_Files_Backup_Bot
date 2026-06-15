@@ -474,6 +474,12 @@ async function renderLibraryMessage(
     console.log(
       "MEDIA PATH READY"
     );
+
+    await sendNodePoster(
+      chatId,
+      node,
+      `🎴 ${node.name}`
+    );
   }
 
   await axios.post(
