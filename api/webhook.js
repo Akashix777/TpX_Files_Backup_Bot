@@ -458,31 +458,13 @@ async function renderLibraryMessage(
   node = null
 ) {
 
-  console.log(
-    "RENDER TARGET:",
-    node
-      ? `NODE:${node.name}`
-      : "ROOT/TEXT"
-  );
 
   if (
     node &&
     node.poster_file_id
   ) {
 
-    console.log(
-      "LIBRARY MESSAGE TYPE:",
-      {
-        text: !!text,
-        node: node?.name,
-        poster:
-          node?.poster_media_type || null
-      }
-    );
 
-    console.log(
-      "MEDIA PATH READY"
-    );
 
     try {
 
@@ -512,9 +494,6 @@ async function renderLibraryMessage(
         }
       );
 
-      console.log(
-        "MEDIA EDIT SUCCESS"
-      );
 
       return;
 
