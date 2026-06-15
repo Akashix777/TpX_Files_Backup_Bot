@@ -550,6 +550,38 @@ async function renderLibraryMessage(
       "TEXT EDIT ERROR:",
       err.response?.data || err.message
     );
+
+    try {
+
+      await axios.post(
+        `https://api.telegram.org/bot${TOKEN}/editMessageMedia`,
+        {
+          chat_id: chatId,
+          message_id: messageId,
+          media: {
+            type: "photo",
+            media: START_IMAGE,
+            caption: text
+          },
+          reply_markup: {
+            inline_keyboard:
+              buttons
+          }
+        }
+      );
+
+      console.log(
+        "MEDIA_TO_TEXT_FALLBACK_SUCCESS"
+      );
+
+    } catch (fallbackErr) {
+
+      console.log(
+        "MEDIA_TO_TEXT_FALLBACK_ERROR:",
+        fallbackErr.response?.data ||
+        fallbackErr.message
+      );
+    }
   }
 }
 
