@@ -35,6 +35,8 @@ const nodeFilesState = {};
 
 const nodePosterState = {};
 
+const libraryRenderState = {};
+
 function clearAdminStates(chatId) {
 
   nodeActionState[chatId] = null;
