@@ -475,13 +475,7 @@ async function renderLibraryMessage(
       "MEDIA PATH READY"
     );
 
-    await sendNodePoster(
-      chatId,
-      node,
-      `MEDIA TEST: ${node.name}`
-    );
 
-    return;
   }
 
   await axios.post(
