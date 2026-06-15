@@ -520,18 +520,28 @@ async function renderLibraryMessage(
 
   }
 
-  await axios.post(
-    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-    {
-      chat_id: chatId,
-      message_id: messageId,
-      text,
-      reply_markup: {
-        inline_keyboard:
-          buttons
+  try {
+
+    await axios.post(
+      `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+      {
+        chat_id: chatId,
+        message_id: messageId,
+        text,
+        reply_markup: {
+          inline_keyboard:
+            buttons
+        }
       }
-    }
-  );
+    );
+
+  } catch (err) {
+
+    console.log(
+      "TEXT EDIT ERROR:",
+      err.response?.data || err.message
+    );
+  }
 }
 
 
