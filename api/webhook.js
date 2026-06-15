@@ -477,13 +477,22 @@ async function renderLibraryMessage(
 
     try {
 
+      const mediaType =
+        node.poster_media_type ===
+        "video"
+          ? "video"
+          : node.poster_media_type ===
+            "animation"
+          ? "animation"
+          : "photo";
+
       await axios.post(
         `https://api.telegram.org/bot${TOKEN}/editMessageMedia`,
         {
           chat_id: chatId,
           message_id: messageId,
           media: {
-            type: "photo",
+            type: mediaType,
             media: node.poster_file_id,
             caption: text
           }
