@@ -456,6 +456,13 @@ async function renderLibraryMessage(
   node = null
 ) {
 
+  console.log(
+    "RENDER TARGET:",
+    node
+      ? `NODE:${node.name}`
+      : "ROOT/TEXT"
+  );
+
   if (
     node &&
     node.poster_file_id
