@@ -462,9 +462,13 @@ async function renderLibraryMessage(
   ) {
 
     console.log(
-      "POSTER NODE:",
-      node.name,
-      node.poster_media_type
+      "LIBRARY MESSAGE TYPE:",
+      {
+        text: !!text,
+        node: node?.name,
+        poster:
+          node?.poster_media_type || null
+      }
     );
   }
 
