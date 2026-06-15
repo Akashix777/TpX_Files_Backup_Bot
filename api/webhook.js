@@ -470,6 +470,10 @@ async function renderLibraryMessage(
           node?.poster_media_type || null
       }
     );
+
+    console.log(
+      "MEDIA PATH READY"
+    );
   }
 
   await axios.post(
