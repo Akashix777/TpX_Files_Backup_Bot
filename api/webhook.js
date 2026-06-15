@@ -475,6 +475,35 @@ async function renderLibraryMessage(
       "MEDIA PATH READY"
     );
 
+    try {
+
+      await axios.post(
+        `https://api.telegram.org/bot${TOKEN}/editMessageMedia`,
+        {
+          chat_id: chatId,
+          message_id: messageId,
+          media: {
+            type: "photo",
+            media: node.poster_file_id,
+            caption: text
+          }
+        }
+      );
+
+      console.log(
+        "MEDIA EDIT SUCCESS"
+      );
+
+      return;
+
+    } catch (err) {
+
+      console.log(
+        "MEDIA EDIT ERROR:",
+        err.response?.data || err.message
+      );
+    }
+
 
   }
 
