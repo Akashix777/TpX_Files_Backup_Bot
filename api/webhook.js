@@ -495,6 +495,10 @@ async function renderLibraryMessage(
             type: mediaType,
             media: node.poster_file_id,
             caption: text
+          },
+          reply_markup: {
+            inline_keyboard:
+              buttons
           }
         }
       );
