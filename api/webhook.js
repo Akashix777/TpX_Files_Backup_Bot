@@ -4715,6 +4715,18 @@ if (
             ""
           );
 
+        nodeActionState[
+          query.message.chat.id
+        ] = null;
+
+        nodeFilesState[
+          query.message.chat.id
+        ] = null;
+
+        nodePosterState[
+          query.message.chat.id
+        ] = null;
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
