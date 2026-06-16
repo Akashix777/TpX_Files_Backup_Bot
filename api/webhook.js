@@ -542,7 +542,8 @@ async function renderLibraryMessage(
           media: {
             type: mediaType,
             media: node.poster_file_id,
-            caption: text
+            caption: text,
+            parse_mode: "HTML"
           },
           reply_markup: {
             inline_keyboard:
@@ -573,6 +574,7 @@ async function renderLibraryMessage(
         chat_id: chatId,
         message_id: messageId,
         text,
+        parse_mode: "HTML",
         reply_markup: {
           inline_keyboard:
             buttons
@@ -597,7 +599,8 @@ async function renderLibraryMessage(
           media: {
             type: "photo",
             media: START_IMAGE,
-            caption: text
+            caption: text,
+            parse_mode: "HTML"
           },
           reply_markup: {
             inline_keyboard:
