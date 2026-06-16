@@ -432,11 +432,55 @@ function buildAutoNodePreview(
   return lines.join("\n");
 }
 
-function buildNodeText(
+async function buildNodePath(
+  db,
   node
 ) {
 
-  return `ROOT > ${node.name}${
+  const parts = [];
+
+  let current = node;
+
+  while (
+    current &&
+    current.public_id !== "ROOT"
+  ) {
+
+    parts.unshift(
+      current.name
+    );
+
+    if (
+      !current.parent_id
+    ) {
+      break;
+    }
+
+    current =
+      await db.nodes.findOne({
+        public_id:
+          current.parent_id
+      });
+  }
+
+  return parts.join(
+    " » "
+  );
+}
+
+
+async function buildNodeText(
+  db,
+  node
+) {
+
+  const path =
+    await buildNodePath(
+      db,
+      node
+    );
+
+  return `${path}${
     node.description
       ? `
 
@@ -809,7 +853,8 @@ async function renderLibraryNode(
   await renderLibraryMessage(
     chatId,
     messageId,
-    buildNodeText(
+    await buildNodeText(
+      db,
       node
     ),
     buttons,
