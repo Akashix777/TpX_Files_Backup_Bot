@@ -6703,6 +6703,132 @@ Send replacement description`,
 
 if (
         query.data.startsWith(
+          "clear_description_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "clear_description_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId,
+            is_trashed: false
+          });
+
+        if (
+          !node ||
+          !node.description
+        ) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Description is not set yet."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`⚠ Clear Description?
+
+This will remove the current description.`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "✅ Confirm",
+                    callback_data:
+                      `confirm_clear_description_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `node_actions_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "confirm_clear_description_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "confirm_clear_description_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId,
+            is_trashed: false
+          });
+
+        if (!node) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await db.nodes.updateOne(
+          {
+            public_id: publicId
+          },
+          {
+            $set: {
+              description: "",
+              description_style:
+                "basic",
+              updated_at:
+                new Date()
+            }
+          }
+        );
+
+        await sendMessage(
+          query.message.chat.id,
+`✅ Description Cleared
+
+Node:
+${node.name}`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
           "rename_node_"
         )
       ) {
