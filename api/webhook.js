@@ -433,9 +433,7 @@ function buildAutoNodePreview(
 }
 
 function buildNodeText(
-  node,
-  page,
-  totalPages
+  node
 ) {
 
   return `ROOT > ${node.name}${
@@ -444,9 +442,7 @@ function buildNodeText(
 
 ${node.description}`
       : ""
-  }
-
-Page ${page}/${totalPages}`;
+  }`;
 }
 
 
@@ -814,9 +810,7 @@ async function renderLibraryNode(
     chatId,
     messageId,
     buildNodeText(
-      node,
-      page,
-      totalPages
+      node
     ),
     buttons,
     node
