@@ -480,13 +480,30 @@ async function buildNodeText(
       node
     );
 
-  return `${path}${
-    node.description
-      ? `
+  let description = "";
 
-${node.description}`
-      : ""
-  }`;
+  if (node.description) {
+
+    if (
+      node.description_style ===
+      "quote"
+    ) {
+
+      description =
+        `
+
+<blockquote>${node.description}</blockquote>`;
+
+    } else {
+
+      description =
+        `
+
+${node.description}`;
+    }
+  }
+
+  return `${path}${description}`;
 }
 
 
@@ -1380,6 +1397,9 @@ ${newName}`
           {
             $set: {
               description,
+              description_style:
+                nodeAction.descriptionStyle ||
+                "basic",
               updated_at:
                 new Date()
             }
@@ -4669,9 +4689,25 @@ if (
                 [
                   {
                     text:
-                      "📝 Edit Description",
+                      "📝 Set Description",
                     callback_data:
                       `description_node_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "📝 Edit Current Description",
+                    callback_data:
+                      `edit_current_description_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "🗑 Clear Description",
+                    callback_data:
+                      `clear_description_${publicId}`
                   }
                 ],
                 [
@@ -6360,12 +6396,73 @@ if (
             ""
           );
 
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`📝 Description Style
+
+Choose description type`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "📝 Basic",
+                    callback_data:
+                      `description_style_basic_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "💬 Quote",
+                    callback_data:
+                      `description_style_quote_${publicId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `node_actions_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "description_style_basic_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "description_style_basic_",
+            ""
+          );
+
         nodeActionState[
           query.message.chat.id
         ] = {
           action:
             "edit_description",
           publicId,
+          descriptionStyle:
+            "basic",
           createdAt: Date.now()
         };
 
@@ -6377,7 +6474,59 @@ if (
             message_id:
               query.message.message_id,
             text:
-              "📝 Send new description",
+              "📝 Send description",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `node_actions_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "description_style_quote_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "description_style_quote_",
+            ""
+          );
+
+        nodeActionState[
+          query.message.chat.id
+        ] = {
+          action:
+            "edit_description",
+          publicId,
+          descriptionStyle:
+            "quote",
+          createdAt: Date.now()
+        };
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+              "💬 Send quote description",
             reply_markup: {
               inline_keyboard: [
                 [
