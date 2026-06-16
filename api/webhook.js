@@ -1426,6 +1426,75 @@ ${node.name}`
 
 
 
+      if (
+        nodeAction &&
+        nodeAction.action ===
+          "edit_current_description"
+      ) {
+
+        const description =
+          text.trim();
+
+        const node =
+          await db.nodes.findOne({
+            public_id:
+              nodeAction.publicId,
+            is_trashed: false
+          });
+
+        if (!node) {
+
+          nodeActionState[
+            chatId
+          ] = null;
+
+          await sendMessage(
+            chatId,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        await db.nodes.updateOne(
+          {
+            public_id:
+              nodeAction.publicId
+          },
+          {
+            $set: {
+              description,
+              description_style:
+                node.description_style ||
+                "basic",
+              updated_at:
+                new Date()
+            }
+          }
+        );
+
+        nodeActionState[
+          chatId
+        ] = null;
+
+        await sendMessage(
+          chatId,
+`✅ Description Updated
+
+Node:
+${node.name}
+
+Style Preserved:
+${node.description_style === "quote"
+  ? "Quote"
+  : "Basic"}`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
       const posterState =
         nodePosterState[chatId];
 
@@ -6530,6 +6599,88 @@ if (
               query.message.message_id,
             text:
               "💬 Send quote description",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "❌ Cancel",
+                    callback_data:
+                      `node_actions_${publicId}`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "edit_current_description_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "edit_current_description_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId,
+            is_trashed: false
+          });
+
+        if (
+          !node ||
+          !node.description
+        ) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Description is not set yet."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        nodeActionState[
+          query.message.chat.id
+        ] = {
+          action:
+            "edit_current_description",
+          publicId,
+          createdAt: Date.now()
+        };
+
+        const style =
+          node.description_style ===
+          "quote"
+            ? "Quote"
+            : "Basic";
+
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`📝 Current Description
+
+${node.description}
+
+Current Style: ${style}
+
+Send replacement description`,
+            parse_mode: "HTML",
             reply_markup: {
               inline_keyboard: [
                 [
