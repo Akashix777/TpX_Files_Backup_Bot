@@ -4664,12 +4664,64 @@ if (query.data.startsWith("lib_open_")) {
 
         } else {
 
-          await renderLibraryNode(
-            db,
-            query.message.chat.id,
-            query.message.message_id,
-            publicId
-          );
+          const view =
+            await buildLibraryNodeView(
+              db,
+              publicId
+            );
+
+          if (
+            view &&
+            view.node &&
+            view.node.poster_file_id
+          ) {
+
+            await removeNodePoster(
+              query.message.chat.id
+            );
+
+            try {
+
+              await axios.post(
+                `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+                {
+                  chat_id:
+                    query.message.chat.id,
+                  message_id:
+                    query.message.message_id
+                }
+              );
+
+            } catch (err) {
+
+              console.log(
+                "NODE_DELETE_ERROR:",
+                err.response?.data ||
+                err.message
+              );
+            }
+
+            await sendNodePoster(
+              query.message.chat.id,
+              view.node,
+              ""
+            );
+
+            await sendLibraryNodeMessage(
+              query.message.chat.id,
+              view.nodeText,
+              view.buttons
+            );
+
+          } else {
+
+            await renderLibraryNode(
+              db,
+              query.message.chat.id,
+              query.message.message_id,
+              publicId
+            );
+          }
         }
 
         return res.sendStatus(200);
