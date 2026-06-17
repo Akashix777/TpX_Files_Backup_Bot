@@ -35,6 +35,8 @@ const nodeFilesState = {};
 
 const nodePosterState = {};
 
+const nodePosterRenderState = {};
+
 const libraryRenderState = {};
 
 function clearAdminStates(chatId) {
@@ -639,7 +641,8 @@ async function sendNodePoster(
 
   const payload = {
     chat_id: chatId,
-    caption
+    caption,
+    parse_mode: "HTML"
   };
 
   if (
@@ -676,6 +679,97 @@ async function sendNodePoster(
     `https://api.telegram.org/bot${TOKEN}/${method}`,
     payload
   );
+}
+
+async function removeNodePoster(
+  chatId
+) {
+
+  const state =
+    nodePosterRenderState[
+      chatId
+    ];
+
+  if (
+    !state ||
+    !state.posterMessageId
+  ) {
+    return;
+  }
+
+  try {
+
+    await axios.post(
+      `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+      {
+        chat_id: chatId,
+        message_id:
+          state.posterMessageId
+      }
+    );
+
+  } catch (err) {
+
+    console.log(
+      "POSTER_DELETE_ERROR:",
+      err.response?.data ||
+      err.message
+    );
+  }
+
+  delete nodePosterRenderState[
+    chatId
+  ];
+}
+
+async function syncNodePoster(
+  chatId,
+  node,
+  caption
+) {
+
+  if (
+    !node ||
+    !node.poster_file_id
+  ) {
+
+    await removeNodePoster(
+      chatId
+    );
+
+    return;
+  }
+
+  await removeNodePoster(
+    chatId
+  );
+
+  try {
+
+    const result =
+      await sendNodePoster(
+        chatId,
+        node,
+        caption
+      );
+
+    nodePosterRenderState[
+      chatId
+    ] = {
+      posterMessageId:
+        result.data.result.message_id,
+      nodeId:
+        node.public_id
+    };
+
+  } catch (err) {
+
+    console.log(
+      "POSTER_SYNC_ERROR:",
+      err.response?.data ||
+      err.message
+    );
+  }
 }
 
 async function renderLibraryRoot(
@@ -727,6 +821,10 @@ async function renderLibraryRoot(
     messageId,
     "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
     buttons
+  );
+
+  await removeNodePoster(
+    chatId
   );
 }
 
@@ -870,15 +968,24 @@ async function renderLibraryNode(
 
   }
 
-  await renderLibraryMessage(
-    chatId,
-    messageId,
+  const nodeText =
     await buildNodeText(
       db,
       node
-    ),
+    );
+
+  await renderLibraryMessage(
+    chatId,
+    messageId,
+    nodeText,
     buttons,
     node
+  );
+
+  await syncNodePoster(
+    chatId,
+    node,
+    nodeText
   );
 }
 
