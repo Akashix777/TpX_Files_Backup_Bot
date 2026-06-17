@@ -717,8 +717,7 @@ async function sendNodePoster(
     "sendPhoto";
 
   const payload = {
-    chat_id: chatId,
-    caption: "ㅤ"
+    chat_id: chatId
   };
 
   if (
