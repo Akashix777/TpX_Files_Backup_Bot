@@ -738,6 +738,14 @@ async function sendNodePoster(
     chat_id: chatId
   };
 
+  if (caption) {
+    payload.caption =
+      caption;
+
+    payload.parse_mode =
+      "HTML";
+  }
+
   if (
     node.poster_media_type ===
     "video"
@@ -4704,12 +4712,12 @@ if (query.data.startsWith("lib_open_")) {
             await sendNodePoster(
               query.message.chat.id,
               view.node,
-              ""
+              view.nodeText
             );
 
             await sendLibraryNodeMessage(
               query.message.chat.id,
-              view.nodeText,
+              "ㅤ",
               view.buttons
             );
 
