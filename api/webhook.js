@@ -115,6 +115,24 @@ async function sendPhoto(chatId, photo, caption, keyboard = null) {
 
 
 
+
+async function sendLibraryNodeMessage(
+  chatId,
+  nodeText,
+  buttons
+) {
+
+  return sendMessage(
+    chatId,
+    nodeText,
+    {
+      inline_keyboard:
+        buttons
+    }
+  );
+}
+
+
 async function getNextNodeId(db) {
   const result =
     await db.counters.findOneAndUpdate(
