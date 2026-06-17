@@ -505,159 +505,7 @@ ${node.description}`;
     }
   }
 
-
   return `${path}${description}`;
-}
-
-
-async function buildLibraryNodeView(
-  db,
-  publicId,
-  page = 1
-) {
-
-  const node =
-    await db.nodes.findOne({
-      public_id: publicId,
-      is_trashed: false
-    });
-
-  if (!node) {
-    return null;
-  }
-
-  const children =
-    await db.nodes.find({
-      parent_id: node.public_id,
-      is_trashed: false
-    }).sort({
-      position: 1,
-      name: 1
-    }).toArray();
-
-  const totalPages =
-    getLibraryTotalPages(
-      children.length
-    );
-
-  page = Math.max(
-    1,
-    Math.min(
-      page,
-      totalPages
-    )
-  );
-
-  const pageChildren =
-    getPageSlice(
-      children,
-      page
-    );
-
-  const buttons =
-    pageChildren.map(
-      child => [{
-        text: child.name,
-        callback_data:
-          `lib_open_${child.public_id}_${node.public_id}_${page}`
-      }]
-    );
-
-  buttons.push([
-    {
-      text: "❮",
-      callback_data:
-        `bankai_library_prev_${node.public_id}_${page}`
-    },
-    {
-      text:
-        `${page}/${totalPages}`,
-      callback_data:
-        "bankai_library_page_label"
-    },
-    {
-      text: "❯",
-      callback_data:
-        `bankai_library_next_${node.public_id}_${page}`
-    }
-  ]);
-
-  buttons.push(
-    buildLibraryJumpButtons(
-      node.public_id,
-      page,
-      totalPages
-    )
-  );
-
-  buttons.push([
-    {
-      text:
-        "➕ Create Child Node",
-      callback_data:
-        `admin_create_${node.public_id}`
-    }
-  ]);
-
-  buttons.push([
-    {
-      text:
-        "⚙ Node Actions",
-      callback_data:
-        `node_actions_${node.public_id}`
-    }
-  ]);
-
-  if (
-    node.parent_id === "ROOT"
-  ) {
-
-    buttons.push([
-      {
-        text: "⬅ BACK",
-        callback_data:
-          `lib_back_${node.parent_id}_${page}`
-      },
-      {
-        text: "❌ CLOSE",
-        callback_data:
-          "close_search"
-      }
-    ]);
-
-  } else {
-
-    buttons.push([
-      {
-        text: "⬅ BACK",
-        callback_data:
-          `lib_back_${node.parent_id}_${page}`
-      },
-      {
-        text: "🏡 N-HOME",
-        callback_data:
-          "bankai_library"
-      },
-      {
-        text: "❌ CLOSE",
-        callback_data:
-          "close_search"
-      }
-    ]);
-  }
-
-  const nodeText =
-    await buildNodeText(
-      db,
-      node
-    );
-
-  return {
-    node,
-    nodeText,
-    buttons,
-    page
-  };
 }
 
 
@@ -718,7 +566,8 @@ async function sendNodePoster(
 
   const payload = {
     chat_id: chatId,
-    caption: "ㅤ"
+    caption,
+    parse_mode: "HTML"
   };
 
   if (
@@ -913,29 +762,155 @@ async function renderLibraryNode(
   page = 1
 ) {
 
-  const view =
-    await buildLibraryNodeView(
-      db,
-      publicId,
+  const node =
+    await db.nodes.findOne({
+      public_id: publicId,
+      is_trashed: false
+    });
+
+  if (!node) {
+    return;
+  }
+
+  const children =
+    await db.nodes.find({
+      parent_id: node.public_id,
+      is_trashed: false
+    }).sort({
+      position: 1,
+      name: 1
+    }).toArray();
+
+  const totalPages =
+    getLibraryTotalPages(
+      children.length
+    );
+
+  page = Math.max(
+    1,
+    Math.min(
+      page,
+      totalPages
+    )
+  );
+
+  const pageChildren =
+    getPageSlice(
+      children,
       page
     );
 
-  if (!view) {
-    return;
+  const buttons =
+    pageChildren.map(
+    child => [{
+      text: child.name,
+      callback_data:
+        `lib_open_${child.public_id}_${node.public_id}_${page}`
+    }]
+  );
+
+  buttons.push([
+    {
+      text:
+        "❮",
+      callback_data:
+        `bankai_library_prev_${node.public_id}_${page}`
+    },
+    {
+      text:
+        `${page}/${totalPages}`,
+      callback_data:
+        "bankai_library_page_label"
+    },
+    {
+      text:
+        "❯",
+      callback_data:
+        `bankai_library_next_${node.public_id}_${page}`
+    }
+  ]);
+
+  buttons.push(
+    buildLibraryJumpButtons(
+      node.public_id,
+      page,
+      totalPages
+    )
+  );
+
+  buttons.push([
+    {
+      text: "➕ Create Child Node",
+      callback_data:
+        `admin_create_${node.public_id}`
+    }
+  ]);
+
+  buttons.push([
+    {
+      text: "⚙ Node Actions",
+      callback_data:
+        `node_actions_${node.public_id}`
+    }
+  ]);
+
+  if (
+    node.parent_id === "ROOT"
+  ) {
+
+    buttons.push([
+      {
+        text: "⬅ BACK",
+        callback_data:
+          `lib_back_${node.parent_id}_${page}`
+      },
+      {
+        text: "❌ CLOSE",
+        callback_data:
+          "close_search"
+      }
+    ]);
+
+  } else {
+
+    buttons.push([
+      {
+        text: "⬅ BACK",
+        callback_data:
+          `lib_back_${node.parent_id}_${page}`
+      },
+      {
+        text: "🏡 N-HOME",
+        callback_data:
+          "bankai_library"
+      },
+      {
+        text: "❌ CLOSE",
+        callback_data:
+          "close_search"
+      }
+    ]);
+
   }
+
+  const nodeText =
+    await buildNodeText(
+      db,
+      node
+    );
 
   await renderLibraryMessage(
     chatId,
     messageId,
-    view.nodeText,
-    view.buttons,
-    view.node
+    nodeText,
+    buttons,
+    node
   );
 
   await syncNodePoster(
     chatId,
-    view.node,
-    view.nodeText
+    node,
+    nodeText
   );
 }
 

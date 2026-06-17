@@ -33,17 +33,10 @@ const nodeActionState = {};
 
 const nodeFilesState = {};
 
-const nodePosterState = {};
-
-const nodePosterRenderState = {};
-
-const libraryRenderState = {};
-
 function clearAdminStates(chatId) {
 
   nodeActionState[chatId] = null;
   nodeFilesState[chatId] = null;
-  nodePosterState[chatId] = null;
 
   uploadMode[chatId] = false;
   uploadType[chatId] = null;
@@ -149,7 +142,6 @@ async function ensureRootNode(db) {
     position: 0,
     description: "",
     poster_file_id: null,
-    poster_media_type: null,
     custom_sort_character: null,
     is_trashed: false,
     created_at: new Date(),
@@ -434,419 +426,6 @@ function buildAutoNodePreview(
   return lines.join("\n");
 }
 
-async function buildNodePath(
-  db,
-  node
-) {
-
-  const parts = [];
-
-  let current = node;
-
-  while (
-    current &&
-    current.public_id !== "ROOT"
-  ) {
-
-    parts.unshift(
-      current.name
-    );
-
-    if (
-      !current.parent_id
-    ) {
-      break;
-    }
-
-    current =
-      await db.nodes.findOne({
-        public_id:
-          current.parent_id
-      });
-  }
-
-  return parts.join(
-    " » "
-  );
-}
-
-
-async function buildNodeText(
-  db,
-  node
-) {
-
-  const path =
-    await buildNodePath(
-      db,
-      node
-    );
-
-  let description = "";
-
-  if (node.description) {
-
-    if (
-      node.description_style ===
-      "quote"
-    ) {
-
-      description =
-        `
-
-<blockquote>${node.description}</blockquote>`;
-
-    } else {
-
-      description =
-        `
-
-${node.description}`;
-    }
-  }
-
-
-  return `${path}${description}`;
-}
-
-
-async function buildLibraryNodeView(
-  db,
-  publicId,
-  page = 1
-) {
-
-  const node =
-    await db.nodes.findOne({
-      public_id: publicId,
-      is_trashed: false
-    });
-
-  if (!node) {
-    return null;
-  }
-
-  const children =
-    await db.nodes.find({
-      parent_id: node.public_id,
-      is_trashed: false
-    }).sort({
-      position: 1,
-      name: 1
-    }).toArray();
-
-  const totalPages =
-    getLibraryTotalPages(
-      children.length
-    );
-
-  page = Math.max(
-    1,
-    Math.min(
-      page,
-      totalPages
-    )
-  );
-
-  const pageChildren =
-    getPageSlice(
-      children,
-      page
-    );
-
-  const buttons =
-    pageChildren.map(
-      child => [{
-        text: child.name,
-        callback_data:
-          `lib_open_${child.public_id}_${node.public_id}_${page}`
-      }]
-    );
-
-  buttons.push([
-    {
-      text: "❮",
-      callback_data:
-        `bankai_library_prev_${node.public_id}_${page}`
-    },
-    {
-      text:
-        `${page}/${totalPages}`,
-      callback_data:
-        "bankai_library_page_label"
-    },
-    {
-      text: "❯",
-      callback_data:
-        `bankai_library_next_${node.public_id}_${page}`
-    }
-  ]);
-
-  buttons.push(
-    buildLibraryJumpButtons(
-      node.public_id,
-      page,
-      totalPages
-    )
-  );
-
-  buttons.push([
-    {
-      text:
-        "➕ Create Child Node",
-      callback_data:
-        `admin_create_${node.public_id}`
-    }
-  ]);
-
-  buttons.push([
-    {
-      text:
-        "⚙ Node Actions",
-      callback_data:
-        `node_actions_${node.public_id}`
-    }
-  ]);
-
-  if (
-    node.parent_id === "ROOT"
-  ) {
-
-    buttons.push([
-      {
-        text: "⬅ BACK",
-        callback_data:
-          `lib_back_${node.parent_id}_${page}`
-      },
-      {
-        text: "❌ CLOSE",
-        callback_data:
-          "close_search"
-      }
-    ]);
-
-  } else {
-
-    buttons.push([
-      {
-        text: "⬅ BACK",
-        callback_data:
-          `lib_back_${node.parent_id}_${page}`
-      },
-      {
-        text: "🏡 N-HOME",
-        callback_data:
-          "bankai_library"
-      },
-      {
-        text: "❌ CLOSE",
-        callback_data:
-          "close_search"
-      }
-    ]);
-  }
-
-  const nodeText =
-    await buildNodeText(
-      db,
-      node
-    );
-
-  return {
-    node,
-    nodeText,
-    buttons,
-    page
-  };
-}
-
-
-async function renderLibraryMessage(
-  chatId,
-  messageId,
-  text,
-  buttons,
-  node = null
-) {
-
-
-  /*
-  CONCEPT-2 MEDIA RENDERER DISABLED
-
-  Poster rendering is now handled by
-  syncNodePoster().
-  */
-
-
-  try {
-
-    await axios.post(
-      `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-      {
-        chat_id: chatId,
-        message_id: messageId,
-        text,
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard:
-            buttons
-        }
-      }
-    );
-
-  } catch (err) {
-
-    console.log(
-      "TEXT EDIT ERROR:",
-      err.response?.data || err.message
-    );
-  }
-}
-
-
-
-
-
-async function sendNodePoster(
-  chatId,
-  node,
-  caption
-) {
-
-  let method =
-    "sendPhoto";
-
-  const payload = {
-    chat_id: chatId,
-    caption: "ㅤ"
-  };
-
-  if (
-    node.poster_media_type ===
-    "video"
-  ) {
-
-    method =
-      "sendVideo";
-
-    payload.video =
-      node.poster_file_id;
-  }
-
-  else if (
-    node.poster_media_type ===
-    "animation"
-  ) {
-
-    method =
-      "sendAnimation";
-
-    payload.animation =
-      node.poster_file_id;
-  }
-
-  else {
-
-    payload.photo =
-      node.poster_file_id;
-  }
-
-  return axios.post(
-    `https://api.telegram.org/bot${TOKEN}/${method}`,
-    payload
-  );
-}
-
-async function removeNodePoster(
-  chatId
-) {
-
-  const state =
-    nodePosterRenderState[
-      chatId
-    ];
-
-  if (
-    !state ||
-    !state.posterMessageId
-  ) {
-    return;
-  }
-
-  try {
-
-    await axios.post(
-      `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
-      {
-        chat_id: chatId,
-        message_id:
-          state.posterMessageId
-      }
-    );
-
-  } catch (err) {
-
-    console.log(
-      "POSTER_DELETE_ERROR:",
-      err.response?.data ||
-      err.message
-    );
-  }
-
-  delete nodePosterRenderState[
-    chatId
-  ];
-}
-
-async function syncNodePoster(
-  chatId,
-  node,
-  caption
-) {
-
-  if (
-    !node ||
-    !node.poster_file_id
-  ) {
-
-    await removeNodePoster(
-      chatId
-    );
-
-    return;
-  }
-
-  await removeNodePoster(
-    chatId
-  );
-
-  try {
-
-    const result =
-      await sendNodePoster(
-        chatId,
-        node,
-        caption
-      );
-
-    nodePosterRenderState[
-      chatId
-    ] = {
-      posterMessageId:
-        result.data.result.message_id,
-      nodeId:
-        node.public_id
-    };
-
-  } catch (err) {
-
-    console.log(
-      "POSTER_SYNC_ERROR:",
-      err.response?.data ||
-      err.message
-    );
-  }
-}
 
 async function renderLibraryRoot(
   db,
@@ -892,15 +471,18 @@ async function renderLibraryRoot(
     }
   ]);
 
-  await renderLibraryMessage(
-    chatId,
-    messageId,
-    "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
-    buttons
-  );
-
-  await removeNodePoster(
-    chatId
+  await axios.post(
+    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+    {
+      chat_id: chatId,
+      message_id: messageId,
+      text:
+        "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+      reply_markup: {
+        inline_keyboard:
+          buttons
+      }
+    }
   );
 }
 
@@ -913,29 +495,151 @@ async function renderLibraryNode(
   page = 1
 ) {
 
-  const view =
-    await buildLibraryNodeView(
-      db,
-      publicId,
-      page
-    );
+  const node =
+    await db.nodes.findOne({
+      public_id: publicId,
+      is_trashed: false
+    });
 
-  if (!view) {
+  if (!node) {
     return;
   }
 
-  await renderLibraryMessage(
-    chatId,
-    messageId,
-    view.nodeText,
-    view.buttons,
-    view.node
+  const children =
+    await db.nodes.find({
+      parent_id: node.public_id,
+      is_trashed: false
+    }).sort({
+      position: 1,
+      name: 1
+    }).toArray();
+
+  const totalPages =
+    getLibraryTotalPages(
+      children.length
+    );
+
+  page = Math.max(
+    1,
+    Math.min(
+      page,
+      totalPages
+    )
   );
 
-  await syncNodePoster(
-    chatId,
-    view.node,
-    view.nodeText
+  const pageChildren =
+    getPageSlice(
+      children,
+      page
+    );
+
+  const buttons =
+    pageChildren.map(
+    child => [{
+      text: child.name,
+      callback_data:
+        `lib_open_${child.public_id}`
+    }]
+  );
+
+  buttons.push([
+    {
+      text:
+        "❮",
+      callback_data:
+        `bankai_library_prev_${node.public_id}_${page}`
+    },
+    {
+      text:
+        `${page}/${totalPages}`,
+      callback_data:
+        "bankai_library_page_label"
+    },
+    {
+      text:
+        "❯",
+      callback_data:
+        `bankai_library_next_${node.public_id}_${page}`
+    }
+  ]);
+
+  buttons.push(
+    buildLibraryJumpButtons(
+      node.public_id,
+      page,
+      totalPages
+    )
+  );
+
+  buttons.push([
+    {
+      text: "➕ Create Child Node",
+      callback_data:
+        `admin_create_${node.public_id}`
+    }
+  ]);
+
+  buttons.push([
+    {
+      text: "⚙ Node Actions",
+      callback_data:
+        `node_actions_${node.public_id}`
+    }
+  ]);
+
+  if (
+    node.parent_id === "ROOT"
+  ) {
+
+    buttons.push([
+      {
+        text: "⬅ BACK",
+        callback_data:
+          `lib_back_${node.parent_id}_${page}`
+      },
+      {
+        text: "❌ CLOSE",
+        callback_data:
+          "close_search"
+      }
+    ]);
+
+  } else {
+
+    buttons.push([
+      {
+        text: "⬅ BACK",
+        callback_data:
+          `lib_back_${node.parent_id}_${page}`
+      },
+      {
+        text: "🏡 N-HOME",
+        callback_data:
+          "bankai_library"
+      },
+      {
+        text: "❌ CLOSE",
+        callback_data:
+          "close_search"
+      }
+    ]);
+
+  }
+
+  await axios.post(
+    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+    {
+      chat_id: chatId,
+      message_id: messageId,
+      text:
+        `ROOT > ${node.name}
+
+Page ${page}/${totalPages}`,
+      reply_markup: {
+        inline_keyboard:
+          buttons
+      }
+    }
   );
 }
 
@@ -1412,218 +1116,6 @@ ${node.name}
 
 New:
 ${newName}`
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-      if (
-        nodeAction &&
-        nodeAction.action ===
-          "edit_description"
-      ) {
-
-        const description =
-          text.trim();
-
-        const node =
-          await db.nodes.findOne({
-            public_id:
-              nodeAction.publicId,
-            is_trashed: false
-          });
-
-        if (!node) {
-
-          nodeActionState[
-            chatId
-          ] = null;
-
-          await sendMessage(
-            chatId,
-            "❌ Node not found."
-          );
-
-          return res.sendStatus(200);
-        }
-
-        await db.nodes.updateOne(
-          {
-            public_id:
-              nodeAction.publicId
-          },
-          {
-            $set: {
-              description,
-              description_style:
-                nodeAction.descriptionStyle ||
-                "basic",
-              updated_at:
-                new Date()
-            }
-          }
-        );
-
-        nodeActionState[
-          chatId
-        ] = null;
-
-        await sendMessage(
-          chatId,
-`✅ Description Updated
-
-Node:
-${node.name}`
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-      if (
-        nodeAction &&
-        nodeAction.action ===
-          "edit_current_description"
-      ) {
-
-        const description =
-          text.trim();
-
-        const node =
-          await db.nodes.findOne({
-            public_id:
-              nodeAction.publicId,
-            is_trashed: false
-          });
-
-        if (!node) {
-
-          nodeActionState[
-            chatId
-          ] = null;
-
-          await sendMessage(
-            chatId,
-            "❌ Node not found."
-          );
-
-          return res.sendStatus(200);
-        }
-
-        await db.nodes.updateOne(
-          {
-            public_id:
-              nodeAction.publicId
-          },
-          {
-            $set: {
-              description,
-              description_style:
-                node.description_style ||
-                "basic",
-              updated_at:
-                new Date()
-            }
-          }
-        );
-
-        nodeActionState[
-          chatId
-        ] = null;
-
-        await sendMessage(
-          chatId,
-`✅ Description Updated
-
-Node:
-${node.name}
-
-Style Preserved:
-${node.description_style === "quote"
-  ? "Quote"
-  : "Basic"}`
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-      const posterState =
-        nodePosterState[chatId];
-
-      if (
-        posterState &&
-        String(chatId) ===
-          String(ADMIN_ID)
-      ) {
-
-        let posterFileId = null;
-        let posterMediaType = null;
-
-        if (msg.photo) {
-
-          const photo =
-            msg.photo[
-              msg.photo.length - 1
-            ];
-
-          posterFileId =
-            photo.file_id;
-
-          posterMediaType =
-            "photo";
-        }
-
-        else if (msg.video) {
-
-          posterFileId =
-            msg.video.file_id;
-
-          posterMediaType =
-            "video";
-        }
-
-        else if (msg.animation) {
-
-          posterFileId =
-            msg.animation.file_id;
-
-          posterMediaType =
-            "animation";
-        }
-
-        if (!posterFileId) {
-          return res.sendStatus(200);
-        }
-
-        await db.nodes.updateOne(
-          {
-            public_id:
-              posterState.publicId
-          },
-          {
-            $set: {
-              poster_file_id:
-                posterFileId,
-              poster_media_type:
-                posterMediaType,
-              updated_at:
-                new Date()
-            }
-          }
-        );
-
-        nodePosterState[
-          chatId
-        ] = null;
-
-        await sendMessage(
-          chatId,
-          "✅ Poster Updated"
         );
 
         return res.sendStatus(200);
@@ -4628,14 +4120,11 @@ if (
 
 if (query.data.startsWith("lib_open_")) {
 
-        const parts =
+        const publicId =
           query.data.replace(
             "lib_open_",
             ""
-          ).split("_");
-
-        const publicId =
-          parts[0];
+          );
 
         if (publicId === "ROOT") {
 
@@ -4772,18 +4261,6 @@ if (
             ""
           );
 
-        nodeActionState[
-          query.message.chat.id
-        ] = null;
-
-        nodeFilesState[
-          query.message.chat.id
-        ] = null;
-
-        nodePosterState[
-          query.message.chat.id
-        ] = null;
-
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/editMessageText`,
           {
@@ -4825,54 +4302,6 @@ if (
                       "✏ Rename Node",
                     callback_data:
                       `rename_node_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "📝 Set Description",
-                    callback_data:
-                      `description_node_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "📝 Edit Current Description",
-                    callback_data:
-                      `edit_current_description_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "🗑 Clear Description",
-                    callback_data:
-                      `clear_description_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "🎴 Set Poster",
-                    callback_data:
-                      `set_poster_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "👁 View Poster",
-                    callback_data:
-                      `view_poster_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "🗑 Remove Poster",
-                    callback_data:
-                      `remove_poster_${publicId}`
                   }
                 ],
                 [
@@ -6386,509 +5815,6 @@ Affected Nodes : ${affectedCount}`,
               ]
             }
           }
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-if (
-        query.data.startsWith(
-          "view_poster_"
-        )
-      ) {
-
-        const publicId =
-          query.data.replace(
-            "view_poster_",
-            ""
-          );
-
-        const node =
-          await db.nodes.findOne({
-            public_id: publicId
-          });
-
-        if (
-          !node ||
-          !node.poster_file_id
-        ) {
-
-          await sendMessage(
-            query.message.chat.id,
-            "❌ No poster set."
-          );
-
-          return res.sendStatus(200);
-        }
-
-        await sendNodePoster(
-          query.message.chat.id,
-          node,
-          `🎴 ${node.name}`
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-if (
-        query.data.startsWith(
-          "remove_poster_"
-        )
-      ) {
-
-        const publicId =
-          query.data.replace(
-            "remove_poster_",
-            ""
-          );
-
-        await db.nodes.updateOne(
-          {
-            public_id: publicId
-          },
-          {
-            $set: {
-              poster_file_id: null,
-              poster_media_type: null,
-              updated_at: new Date()
-            }
-          }
-        );
-
-        await sendMessage(
-          query.message.chat.id,
-          "✅ Poster Removed"
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-if (
-        query.data.startsWith(
-          "set_poster_"
-        )
-      ) {
-
-        const publicId =
-          query.data.replace(
-            "set_poster_",
-            ""
-          );
-
-        nodePosterState[
-          query.message.chat.id
-        ] = {
-          publicId,
-          createdAt: Date.now()
-        };
-
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-          {
-            chat_id:
-              query.message.chat.id,
-            message_id:
-              query.message.message_id,
-            text:
-`🎴 Set Poster
-
-Send:
-
-• Photo
-• Video
-• GIF
-
-Poster will replace existing one.`,
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text:
-                      "❌ Cancel",
-                    callback_data:
-                      `node_actions_${publicId}`
-                  }
-                ]
-              ]
-            }
-          }
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-if (
-        query.data.startsWith(
-          "description_node_"
-        )
-      ) {
-
-        const publicId =
-          query.data.replace(
-            "description_node_",
-            ""
-          );
-
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-          {
-            chat_id:
-              query.message.chat.id,
-            message_id:
-              query.message.message_id,
-            text:
-`📝 Description Style
-
-Choose description type`,
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text:
-                      "📝 Basic",
-                    callback_data:
-                      `description_style_basic_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "💬 Quote",
-                    callback_data:
-                      `description_style_quote_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "❌ Cancel",
-                    callback_data:
-                      `node_actions_${publicId}`
-                  }
-                ]
-              ]
-            }
-          }
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-if (
-        query.data.startsWith(
-          "description_style_basic_"
-        )
-      ) {
-
-        const publicId =
-          query.data.replace(
-            "description_style_basic_",
-            ""
-          );
-
-        nodeActionState[
-          query.message.chat.id
-        ] = {
-          action:
-            "edit_description",
-          publicId,
-          descriptionStyle:
-            "basic",
-          createdAt: Date.now()
-        };
-
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-          {
-            chat_id:
-              query.message.chat.id,
-            message_id:
-              query.message.message_id,
-            text:
-              "📝 Send description",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text:
-                      "❌ Cancel",
-                    callback_data:
-                      `node_actions_${publicId}`
-                  }
-                ]
-              ]
-            }
-          }
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-if (
-        query.data.startsWith(
-          "description_style_quote_"
-        )
-      ) {
-
-        const publicId =
-          query.data.replace(
-            "description_style_quote_",
-            ""
-          );
-
-        nodeActionState[
-          query.message.chat.id
-        ] = {
-          action:
-            "edit_description",
-          publicId,
-          descriptionStyle:
-            "quote",
-          createdAt: Date.now()
-        };
-
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-          {
-            chat_id:
-              query.message.chat.id,
-            message_id:
-              query.message.message_id,
-            text:
-              "💬 Send quote description",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text:
-                      "❌ Cancel",
-                    callback_data:
-                      `node_actions_${publicId}`
-                  }
-                ]
-              ]
-            }
-          }
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-if (
-        query.data.startsWith(
-          "edit_current_description_"
-        )
-      ) {
-
-        const publicId =
-          query.data.replace(
-            "edit_current_description_",
-            ""
-          );
-
-        const node =
-          await db.nodes.findOne({
-            public_id: publicId,
-            is_trashed: false
-          });
-
-        if (
-          !node ||
-          !node.description
-        ) {
-
-          await sendMessage(
-            query.message.chat.id,
-            "❌ Description is not set yet."
-          );
-
-          return res.sendStatus(200);
-        }
-
-        nodeActionState[
-          query.message.chat.id
-        ] = {
-          action:
-            "edit_current_description",
-          publicId,
-          createdAt: Date.now()
-        };
-
-        const style =
-          node.description_style ===
-          "quote"
-            ? "Quote"
-            : "Basic";
-
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-          {
-            chat_id:
-              query.message.chat.id,
-            message_id:
-              query.message.message_id,
-            text:
-`📝 Current Description
-
-${node.description}
-
-Current Style: ${style}
-
-Send replacement description`,
-            parse_mode: "HTML",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text:
-                      "❌ Cancel",
-                    callback_data:
-                      `node_actions_${publicId}`
-                  }
-                ]
-              ]
-            }
-          }
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-if (
-        query.data.startsWith(
-          "clear_description_"
-        )
-      ) {
-
-        const publicId =
-          query.data.replace(
-            "clear_description_",
-            ""
-          );
-
-        const node =
-          await db.nodes.findOne({
-            public_id: publicId,
-            is_trashed: false
-          });
-
-        if (
-          !node ||
-          !node.description
-        ) {
-
-          await sendMessage(
-            query.message.chat.id,
-            "❌ Description is not set yet."
-          );
-
-          return res.sendStatus(200);
-        }
-
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-          {
-            chat_id:
-              query.message.chat.id,
-            message_id:
-              query.message.message_id,
-            text:
-`⚠ Clear Description?
-
-This will remove the current description.`,
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text:
-                      "✅ Confirm",
-                    callback_data:
-                      `confirm_clear_description_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "❌ Cancel",
-                    callback_data:
-                      `node_actions_${publicId}`
-                  }
-                ]
-              ]
-            }
-          }
-        );
-
-        return res.sendStatus(200);
-      }
-
-
-
-if (
-        query.data.startsWith(
-          "confirm_clear_description_"
-        )
-      ) {
-
-        const publicId =
-          query.data.replace(
-            "confirm_clear_description_",
-            ""
-          );
-
-        const node =
-          await db.nodes.findOne({
-            public_id: publicId,
-            is_trashed: false
-          });
-
-        if (!node) {
-
-          await sendMessage(
-            query.message.chat.id,
-            "❌ Node not found."
-          );
-
-          return res.sendStatus(200);
-        }
-
-        await db.nodes.updateOne(
-          {
-            public_id: publicId
-          },
-          {
-            $set: {
-              description: "",
-              description_style:
-                "basic",
-              updated_at:
-                new Date()
-            }
-          }
-        );
-
-        await sendMessage(
-          query.message.chat.id,
-`✅ Description Cleared
-
-Node:
-${node.name}`
         );
 
         return res.sendStatus(200);
