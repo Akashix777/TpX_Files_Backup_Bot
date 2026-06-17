@@ -518,55 +518,13 @@ async function renderLibraryMessage(
 ) {
 
 
-  if (
-    node &&
-    node.poster_file_id
-  ) {
+  /*
+  CONCEPT-2 MEDIA RENDERER DISABLED
 
+  Poster rendering is now handled by
+  syncNodePoster().
+  */
 
-
-    try {
-
-      const mediaType =
-        node.poster_media_type ===
-        "video"
-          ? "video"
-          : node.poster_media_type ===
-            "animation"
-          ? "animation"
-          : "photo";
-
-      await axios.post(
-        `https://api.telegram.org/bot${TOKEN}/editMessageMedia`,
-        {
-          chat_id: chatId,
-          message_id: messageId,
-          media: {
-            type: mediaType,
-            media: node.poster_file_id,
-            caption: text,
-            parse_mode: "HTML"
-          },
-          reply_markup: {
-            inline_keyboard:
-              buttons
-          }
-        }
-      );
-
-
-      return;
-
-    } catch (err) {
-
-      console.log(
-        "MEDIA EDIT ERROR:",
-        err.response?.data || err.message
-      );
-    }
-
-
-  }
 
   try {
 
@@ -590,39 +548,6 @@ async function renderLibraryMessage(
       "TEXT EDIT ERROR:",
       err.response?.data || err.message
     );
-
-    try {
-
-      await axios.post(
-        `https://api.telegram.org/bot${TOKEN}/editMessageMedia`,
-        {
-          chat_id: chatId,
-          message_id: messageId,
-          media: {
-            type: "photo",
-            media: START_IMAGE,
-            caption: text,
-            parse_mode: "HTML"
-          },
-          reply_markup: {
-            inline_keyboard:
-              buttons
-          }
-        }
-      );
-
-      console.log(
-        "MEDIA_TO_TEXT_FALLBACK_SUCCESS"
-      );
-
-    } catch (fallbackErr) {
-
-      console.log(
-        "MEDIA_TO_TEXT_FALLBACK_ERROR:",
-        fallbackErr.response?.data ||
-        fallbackErr.message
-      );
-    }
   }
 }
 
