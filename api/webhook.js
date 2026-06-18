@@ -1018,6 +1018,46 @@ async function akashiNodeRenderer(
     return;
   }
 
+  const posterState =
+    nodePosterRenderState[
+      chatId
+    ];
+
+  if (
+    posterState &&
+    posterState.posterMessageId ===
+    messageId
+  ) {
+
+    try {
+
+      await axios.post(
+        `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+        {
+          chat_id: chatId,
+          message_id:
+            messageId
+        }
+      );
+
+    } catch (err) {}
+
+    delete nodePosterRenderState[
+      chatId
+    ];
+
+    await sendMessage(
+      chatId,
+      view.nodeText,
+      {
+        inline_keyboard:
+          view.buttons
+      }
+    );
+
+    return;
+  }
+
   await renderLibraryMessage(
     chatId,
     messageId,
