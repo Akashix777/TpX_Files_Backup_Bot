@@ -728,7 +728,8 @@ async function renderLibraryMessage(
 async function sendNodePoster(
   chatId,
   node,
-  caption
+  caption,
+  buttons = null
 ) {
 
   let method =
@@ -744,6 +745,13 @@ async function sendNodePoster(
 
     payload.parse_mode =
       "HTML";
+  }
+
+  if (buttons) {
+    payload.reply_markup = {
+      inline_keyboard:
+        buttons
+    };
   }
 
   if (
@@ -929,6 +937,95 @@ async function renderLibraryRoot(
   );
 }
 
+
+
+async function akashiNodeRenderer(
+  db,
+  chatId,
+  messageId,
+  publicId,
+  page = 1
+) {
+
+  const view =
+    await buildLibraryNodeView(
+      db,
+      publicId,
+      page
+    );
+
+  if (!view) {
+    return;
+  }
+
+  if (
+    view.node &&
+    view.node.poster_file_id
+  ) {
+
+    await removeNodePoster(
+      chatId
+    );
+
+    try {
+
+      await axios.post(
+        `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+        {
+          chat_id: chatId,
+          message_id:
+            messageId
+        }
+      );
+
+    } catch (err) {
+
+      console.log(
+        "AKASHI_DELETE_ERROR:",
+        err.response?.data ||
+        err.message
+      );
+    }
+
+    try {
+
+      const result =
+        await sendNodePoster(
+          chatId,
+          view.node,
+          view.nodeText,
+          view.buttons
+        );
+
+      nodePosterRenderState[
+        chatId
+      ] = {
+        posterMessageId:
+          result.data.result.message_id,
+        nodeId:
+          view.node.public_id
+      };
+
+    } catch (err) {
+
+      console.log(
+        "AKASHI_RENDER_ERROR:",
+        err.response?.data ||
+        err.message
+      );
+    }
+
+    return;
+  }
+
+  await renderLibraryMessage(
+    chatId,
+    messageId,
+    view.nodeText,
+    view.buttons,
+    view.node
+  );
+}
 
 async function renderLibraryNode(
   db,
@@ -4678,58 +4775,12 @@ if (query.data.startsWith("lib_open_")) {
               publicId
             );
 
-          if (
-            view &&
-            view.node &&
-            view.node.poster_file_id
-          ) {
-
-            await removeNodePoster(
-              query.message.chat.id
-            );
-
-            try {
-
-              await axios.post(
-                `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
-                {
-                  chat_id:
-                    query.message.chat.id,
-                  message_id:
-                    query.message.message_id
-                }
-              );
-
-            } catch (err) {
-
-              console.log(
-                "NODE_DELETE_ERROR:",
-                err.response?.data ||
-                err.message
-              );
-            }
-
-            await sendNodePoster(
-              query.message.chat.id,
-              view.node,
-              view.nodeText
-            );
-
-            await sendLibraryNodeMessage(
-              query.message.chat.id,
-              "ㅤ",
-              view.buttons
-            );
-
-          } else {
-
-            await renderLibraryNode(
-              db,
-              query.message.chat.id,
-              query.message.message_id,
-              publicId
-            );
-          }
+          await akashiNodeRenderer(
+            db,
+            query.message.chat.id,
+            query.message.message_id,
+            publicId
+          );
         }
 
         return res.sendStatus(200);
