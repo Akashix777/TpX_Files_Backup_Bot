@@ -4866,15 +4866,75 @@ if (query.data.startsWith("lib_back_")) {
 
         if (parentId === "ROOT") {
 
-          await renderLibraryRoot(
-            db,
+          try {
+
+            await axios.post(
+              `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+              {
+                chat_id:
+                  query.message.chat.id,
+                message_id:
+                  query.message.message_id
+              }
+            );
+
+          } catch (err) {}
+
+          await removeNodePoster(
+            query.message.chat.id
+          );
+
+          const rootChildren =
+            await db.nodes.find({
+              parent_id: "ROOT",
+              is_trashed: false
+            }).sort({
+              position: 1,
+              name: 1
+            }).toArray();
+
+          const buttons =
+            rootChildren.map(
+              node => [{
+                text: node.name,
+                callback_data:
+                  `lib_open_${node.public_id}`
+              }]
+            );
+
+          buttons.push([
+            {
+              text: "➕ Create Child Node",
+              callback_data:
+                "admin_create_ROOT"
+            }
+          ]);
+
+          buttons.push([
+            {
+              text: "⬅ BACK",
+              callback_data:
+                "back_admin_panel"
+            },
+            {
+              text: "❌ CLOSE",
+              callback_data:
+                "close_search"
+            }
+          ]);
+
+          await sendMessage(
             query.message.chat.id,
-            query.message.message_id
+            "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+            {
+              inline_keyboard:
+                buttons
+            }
           );
 
         } else {
 
-          await renderLibraryNode(
+          await akashiNodeRenderer(
             db,
             query.message.chat.id,
             query.message.message_id,
