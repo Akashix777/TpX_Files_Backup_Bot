@@ -4854,7 +4854,7 @@ if (
         const nodeId =
           parts.pop();
 
-        await renderLibraryNode(
+        await akashiNodeRenderer(
           db,
           query.message.chat.id,
           query.message.message_id,
@@ -4924,7 +4924,7 @@ if (
         const nodeId =
           parts.pop();
 
-        await renderLibraryNode(
+        await akashiNodeRenderer(
           db,
           query.message.chat.id,
           query.message.message_id,
@@ -4954,7 +4954,7 @@ if (
         const nodeId =
           parts.pop();
 
-        await renderLibraryNode(
+        await akashiNodeRenderer(
           db,
           query.message.chat.id,
           query.message.message_id,
