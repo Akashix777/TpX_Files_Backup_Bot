@@ -133,68 +133,6 @@ async function sendLibraryNodeMessage(
 }
 
 
-
-async function akashiOpenMenu(
-  chatId,
-  messageId,
-  text,
-  buttons
-) {
-
-  const posterState =
-    nodePosterRenderState[
-      chatId
-    ];
-
-  if (
-    posterState &&
-    posterState.posterMessageId ===
-    messageId
-  ) {
-
-    try {
-
-      await axios.post(
-        `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
-        {
-          chat_id: chatId,
-          message_id:
-            messageId
-        }
-      );
-
-    } catch (err) {}
-
-    delete nodePosterRenderState[
-      chatId
-    ];
-
-    return sendMessage(
-      chatId,
-      text,
-      {
-        inline_keyboard:
-          buttons
-      }
-    );
-  }
-
-  return axios.post(
-    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-    {
-      chat_id: chatId,
-      message_id:
-        messageId,
-      text,
-      reply_markup: {
-        inline_keyboard:
-          buttons
-      }
-    }
-  );
-}
-
-
 async function getNextNodeId(db) {
   const result =
     await db.counters.findOneAndUpdate(
@@ -790,8 +728,7 @@ async function renderLibraryMessage(
 async function sendNodePoster(
   chatId,
   node,
-  caption,
-  buttons = null
+  caption
 ) {
 
   let method =
@@ -807,13 +744,6 @@ async function sendNodePoster(
 
     payload.parse_mode =
       "HTML";
-  }
-
-  if (buttons) {
-    payload.reply_markup = {
-      inline_keyboard:
-        buttons
-    };
   }
 
   if (
@@ -999,135 +929,6 @@ async function renderLibraryRoot(
   );
 }
 
-
-
-async function akashiNodeRenderer(
-  db,
-  chatId,
-  messageId,
-  publicId,
-  page = 1
-) {
-
-  const view =
-    await buildLibraryNodeView(
-      db,
-      publicId,
-      page
-    );
-
-  if (!view) {
-    return;
-  }
-
-  if (
-    view.node &&
-    view.node.poster_file_id
-  ) {
-
-    await removeNodePoster(
-      chatId
-    );
-
-    try {
-
-      await axios.post(
-        `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
-        {
-          chat_id: chatId,
-          message_id:
-            messageId
-        }
-      );
-
-    } catch (err) {
-
-      console.log(
-        "AKASHI_DELETE_ERROR:",
-        err.response?.data ||
-        err.message
-      );
-    }
-
-    try {
-
-      const result =
-        await sendNodePoster(
-          chatId,
-          view.node,
-          view.nodeText,
-          view.buttons
-        );
-
-      nodePosterRenderState[
-        chatId
-      ] = {
-        posterMessageId:
-          result.data.result.message_id,
-        nodeId:
-          view.node.public_id
-      };
-
-    } catch (err) {
-
-      console.log(
-        "AKASHI_RENDER_ERROR:",
-        err.response?.data ||
-        err.message
-      );
-    }
-
-    return;
-  }
-
-  const posterState =
-    nodePosterRenderState[
-      chatId
-    ];
-
-  if (
-    posterState &&
-    posterState.posterMessageId ===
-    messageId
-  ) {
-
-    try {
-
-      await axios.post(
-        `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
-        {
-          chat_id: chatId,
-          message_id:
-            messageId
-        }
-      );
-
-    } catch (err) {}
-
-    delete nodePosterRenderState[
-      chatId
-    ];
-
-    await sendMessage(
-      chatId,
-      view.nodeText,
-      {
-        inline_keyboard:
-          view.buttons
-      }
-    );
-
-    return;
-  }
-
-  await renderLibraryMessage(
-    chatId,
-    messageId,
-    view.nodeText,
-    view.buttons,
-    view.node
-  );
-}
 
 async function renderLibraryNode(
   db,
@@ -4036,91 +3837,12 @@ if (query.data === "admin_broadcast") {
 
 if (query.data === "bankai_library") {
 
-        const posterState =
-          nodePosterRenderState[
-            query.message.chat.id
-          ];
 
-        if (
-          posterState &&
-          posterState.posterMessageId ===
+        await renderLibraryRoot(
+          db,
+          query.message.chat.id,
           query.message.message_id
-        ) {
-
-          try {
-
-            await axios.post(
-              `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
-              {
-                chat_id:
-                  query.message.chat.id,
-                message_id:
-                  query.message.message_id
-              }
-            );
-
-          } catch (err) {}
-
-          delete nodePosterRenderState[
-            query.message.chat.id
-          ];
-
-          const rootChildren =
-            await db.nodes.find({
-              parent_id: "ROOT",
-              is_trashed: false
-            }).sort({
-              position: 1,
-              name: 1
-            }).toArray();
-
-          const buttons =
-            rootChildren.map(
-              node => [{
-                text: node.name,
-                callback_data:
-                  `lib_open_${node.public_id}`
-              }]
-            );
-
-          buttons.push([
-            {
-              text: "➕ Create Child Node",
-              callback_data:
-                "admin_create_ROOT"
-            }
-          ]);
-
-          buttons.push([
-            {
-              text: "⬅ BACK",
-              callback_data:
-                "back_admin_panel"
-            },
-            {
-              text: "❌ CLOSE",
-              callback_data:
-                "close_search"
-            }
-          ]);
-
-          await sendMessage(
-            query.message.chat.id,
-            "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
-            {
-              inline_keyboard:
-                buttons
-            }
-          );
-
-        } else {
-
-          await renderLibraryRoot(
-            db,
-            query.message.chat.id,
-            query.message.message_id
-          );
-        }
+        );
 
         return res.sendStatus(200);
       }
@@ -4139,44 +3861,50 @@ if (
             ""
           );
 
-        const buttons = [
-          [
-            {
-              text:
-                "ㅤBASICㅤ",
-              callback_data:
-                `create_basic_${parentNodeId}`
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`Choose Mode`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "ㅤBASICㅤ",
+                    callback_data:
+                      `create_basic_${parentNodeId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "ㅤPOWERFULㅤ❖ㅤAUTOMATEDㅤ",
+                    callback_data:
+                      `create_powerful_${parentNodeId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "🔙  BACK",
+                    callback_data:
+                      `lib_open_${parentNodeId}`
+                  },
+                  {
+                    text:
+                      "✖️  CLOSE",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
             }
-          ],
-          [
-            {
-              text:
-                "ㅤPOWERFULㅤ❖ㅤAUTOMATEDㅤ",
-              callback_data:
-                `create_powerful_${parentNodeId}`
-            }
-          ],
-          [
-            {
-              text:
-                "🔙  BACK",
-              callback_data:
-                `lib_open_${parentNodeId}`
-            },
-            {
-              text:
-                "✖️  CLOSE",
-              callback_data:
-                "close_search"
-            }
-          ]
-        ];
-
-        await akashiOpenMenu(
-          query.message.chat.id,
-          query.message.message_id,
-          `Choose Mode`,
-          buttons
+          }
         );
 
         return res.sendStatus(200);
@@ -4910,7 +4638,7 @@ if (
         const nodeId =
           parts.pop();
 
-        await akashiNodeRenderer(
+        await renderLibraryNode(
           db,
           query.message.chat.id,
           query.message.message_id,
@@ -4950,12 +4678,58 @@ if (query.data.startsWith("lib_open_")) {
               publicId
             );
 
-          await akashiNodeRenderer(
-            db,
-            query.message.chat.id,
-            query.message.message_id,
-            publicId
-          );
+          if (
+            view &&
+            view.node &&
+            view.node.poster_file_id
+          ) {
+
+            await removeNodePoster(
+              query.message.chat.id
+            );
+
+            try {
+
+              await axios.post(
+                `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+                {
+                  chat_id:
+                    query.message.chat.id,
+                  message_id:
+                    query.message.message_id
+                }
+              );
+
+            } catch (err) {
+
+              console.log(
+                "NODE_DELETE_ERROR:",
+                err.response?.data ||
+                err.message
+              );
+            }
+
+            await sendNodePoster(
+              query.message.chat.id,
+              view.node,
+              view.nodeText
+            );
+
+            await sendLibraryNodeMessage(
+              query.message.chat.id,
+              "ㅤ",
+              view.buttons
+            );
+
+          } else {
+
+            await renderLibraryNode(
+              db,
+              query.message.chat.id,
+              query.message.message_id,
+              publicId
+            );
+          }
         }
 
         return res.sendStatus(200);
@@ -4980,7 +4754,7 @@ if (
         const nodeId =
           parts.pop();
 
-        await akashiNodeRenderer(
+        await renderLibraryNode(
           db,
           query.message.chat.id,
           query.message.message_id,
@@ -5010,7 +4784,7 @@ if (
         const nodeId =
           parts.pop();
 
-        await akashiNodeRenderer(
+        await renderLibraryNode(
           db,
           query.message.chat.id,
           query.message.message_id,
@@ -5041,75 +4815,15 @@ if (query.data.startsWith("lib_back_")) {
 
         if (parentId === "ROOT") {
 
-          try {
-
-            await axios.post(
-              `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
-              {
-                chat_id:
-                  query.message.chat.id,
-                message_id:
-                  query.message.message_id
-              }
-            );
-
-          } catch (err) {}
-
-          await removeNodePoster(
-            query.message.chat.id
-          );
-
-          const rootChildren =
-            await db.nodes.find({
-              parent_id: "ROOT",
-              is_trashed: false
-            }).sort({
-              position: 1,
-              name: 1
-            }).toArray();
-
-          const buttons =
-            rootChildren.map(
-              node => [{
-                text: node.name,
-                callback_data:
-                  `lib_open_${node.public_id}`
-              }]
-            );
-
-          buttons.push([
-            {
-              text: "➕ Create Child Node",
-              callback_data:
-                "admin_create_ROOT"
-            }
-          ]);
-
-          buttons.push([
-            {
-              text: "⬅ BACK",
-              callback_data:
-                "back_admin_panel"
-            },
-            {
-              text: "❌ CLOSE",
-              callback_data:
-                "close_search"
-            }
-          ]);
-
-          await sendMessage(
+          await renderLibraryRoot(
+            db,
             query.message.chat.id,
-            "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
-            {
-              inline_keyboard:
-                buttons
-            }
+            query.message.message_id
           );
 
         } else {
 
-          await akashiNodeRenderer(
+          await renderLibraryNode(
             db,
             query.message.chat.id,
             query.message.message_id,

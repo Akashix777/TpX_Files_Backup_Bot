@@ -133,68 +133,6 @@ async function sendLibraryNodeMessage(
 }
 
 
-
-async function akashiOpenMenu(
-  chatId,
-  messageId,
-  text,
-  buttons
-) {
-
-  const posterState =
-    nodePosterRenderState[
-      chatId
-    ];
-
-  if (
-    posterState &&
-    posterState.posterMessageId ===
-    messageId
-  ) {
-
-    try {
-
-      await axios.post(
-        `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
-        {
-          chat_id: chatId,
-          message_id:
-            messageId
-        }
-      );
-
-    } catch (err) {}
-
-    delete nodePosterRenderState[
-      chatId
-    ];
-
-    return sendMessage(
-      chatId,
-      text,
-      {
-        inline_keyboard:
-          buttons
-      }
-    );
-  }
-
-  return axios.post(
-    `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-    {
-      chat_id: chatId,
-      message_id:
-        messageId,
-      text,
-      reply_markup: {
-        inline_keyboard:
-          buttons
-      }
-    }
-  );
-}
-
-
 async function getNextNodeId(db) {
   const result =
     await db.counters.findOneAndUpdate(
@@ -4139,44 +4077,50 @@ if (
             ""
           );
 
-        const buttons = [
-          [
-            {
-              text:
-                "ㅤBASICㅤ",
-              callback_data:
-                `create_basic_${parentNodeId}`
+        await axios.post(
+          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+          {
+            chat_id:
+              query.message.chat.id,
+            message_id:
+              query.message.message_id,
+            text:
+`Choose Mode`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text:
+                      "ㅤBASICㅤ",
+                    callback_data:
+                      `create_basic_${parentNodeId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "ㅤPOWERFULㅤ❖ㅤAUTOMATEDㅤ",
+                    callback_data:
+                      `create_powerful_${parentNodeId}`
+                  }
+                ],
+                [
+                  {
+                    text:
+                      "🔙  BACK",
+                    callback_data:
+                      `lib_open_${parentNodeId}`
+                  },
+                  {
+                    text:
+                      "✖️  CLOSE",
+                    callback_data:
+                      "close_search"
+                  }
+                ]
+              ]
             }
-          ],
-          [
-            {
-              text:
-                "ㅤPOWERFULㅤ❖ㅤAUTOMATEDㅤ",
-              callback_data:
-                `create_powerful_${parentNodeId}`
-            }
-          ],
-          [
-            {
-              text:
-                "🔙  BACK",
-              callback_data:
-                `lib_open_${parentNodeId}`
-            },
-            {
-              text:
-                "✖️  CLOSE",
-              callback_data:
-                "close_search"
-            }
-          ]
-        ];
-
-        await akashiOpenMenu(
-          query.message.chat.id,
-          query.message.message_id,
-          `Choose Mode`,
-          buttons
+          }
         );
 
         return res.sendStatus(200);

@@ -1,0 +1,1400 @@
+4000:
+4001:        return res.sendStatus(200);
+4002:      }
+4003:
+4004:      if (query.data === "stop_upload_button") {
+4005:
+4006:        clearAdminStates(
+4007:          query.message.chat.id
+4008:        );
+4009:
+4010:        await axios.post(
+4011:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+4012:          {
+4013:            chat_id: query.message.chat.id,
+4014:            message_id: query.message.message_id,
+4015:            text: "Upload Stopped",
+4016:            reply_markup: {
+4017:              inline_keyboard: [
+4018:                [
+4019:                  {
+4020:                    text: "⬅ Back",
+4021:                    callback_data: "admin_upload"
+4022:                  },
+4023:                  {
+4024:                    text: " 🔒 Close ",
+4025:                    callback_data: "close_search"
+4026:                  }
+4027:                ]
+4028:              ]
+4029:            }
+4030:          }
+4031:        );
+4032:
+4033:        return res.sendStatus(200);
+4034:      }
+4035:
+4036:
+4037:if (query.data === "bankai_library") {
+4038:
+4039:        const posterState =
+4040:          nodePosterRenderState[
+4041:            query.message.chat.id
+4042:          ];
+4043:
+4044:        if (
+4045:          posterState &&
+4046:          posterState.posterMessageId ===
+4047:          query.message.message_id
+4048:        ) {
+4049:
+4050:          try {
+4051:
+4052:            await axios.post(
+4053:              `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+4054:              {
+4055:                chat_id:
+4056:                  query.message.chat.id,
+4057:                message_id:
+4058:                  query.message.message_id
+4059:              }
+4060:            );
+4061:
+4062:          } catch (err) {}
+4063:
+4064:          delete nodePosterRenderState[
+4065:            query.message.chat.id
+4066:          ];
+4067:
+4068:          const rootChildren =
+4069:            await db.nodes.find({
+4070:              parent_id: "ROOT",
+4071:              is_trashed: false
+4072:            }).sort({
+4073:              position: 1,
+4074:              name: 1
+4075:            }).toArray();
+4076:
+4077:          const buttons =
+4078:            rootChildren.map(
+4079:              node => [{
+4080:                text: node.name,
+4081:                callback_data:
+4082:                  `lib_open_${node.public_id}`
+4083:              }]
+4084:            );
+4085:
+4086:          buttons.push([
+4087:            {
+4088:              text: "➕ Create Child Node",
+4089:              callback_data:
+4090:                "admin_create_ROOT"
+4091:            }
+4092:          ]);
+4093:
+4094:          buttons.push([
+4095:            {
+4096:              text: "⬅ BACK",
+4097:              callback_data:
+4098:                "back_admin_panel"
+4099:            },
+4100:            {
+4101:              text: "❌ CLOSE",
+4102:              callback_data:
+4103:                "close_search"
+4104:            }
+4105:          ]);
+4106:
+4107:          await sendMessage(
+4108:            query.message.chat.id,
+4109:            "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+4110:            {
+4111:              inline_keyboard:
+4112:                buttons
+4113:            }
+4114:          );
+4115:
+4116:        } else {
+4117:
+4118:          await renderLibraryRoot(
+4119:            db,
+4120:            query.message.chat.id,
+4121:            query.message.message_id
+4122:          );
+4123:        }
+4124:
+4125:        return res.sendStatus(200);
+4126:      }
+4127:
+4128:
+4129:
+4130:if (
+4131:        query.data.startsWith(
+4132:          "admin_create_"
+4133:        )
+4134:      ) {
+4135:
+4136:        const parentNodeId =
+4137:          query.data.replace(
+4138:            "admin_create_",
+4139:            ""
+4140:          );
+4141:
+4142:        await axios.post(
+4143:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+4144:          {
+4145:            chat_id:
+4146:              query.message.chat.id,
+4147:            message_id:
+4148:              query.message.message_id,
+4149:            text:
+4150:`Choose Mode`,
+4151:            reply_markup: {
+4152:              inline_keyboard: [
+4153:                [
+4154:                  {
+4155:                    text:
+4156:                      "ㅤBASICㅤ",
+4157:                    callback_data:
+4158:                      `create_basic_${parentNodeId}`
+4159:                  }
+4160:                ],
+4161:                [
+4162:                  {
+4163:                    text:
+4164:                      "ㅤPOWERFULㅤ❖ㅤAUTOMATEDㅤ",
+4165:                    callback_data:
+4166:                      `create_powerful_${parentNodeId}`
+4167:                  }
+4168:                ],
+4169:                [
+4170:                  {
+4171:                    text:
+4172:                      "🔙  BACK",
+4173:                    callback_data:
+4174:                      `lib_open_${parentNodeId}`
+4175:                  },
+4176:                  {
+4177:                    text:
+4178:                      "✖️  CLOSE",
+4179:                    callback_data:
+4180:                      "close_search"
+4181:                  }
+4182:                ]
+4183:              ]
+4184:            }
+4185:          }
+4186:        );
+4187:
+4188:        return res.sendStatus(200);
+4189:      }
+4190:
+4191:
+4192:
+4193:if (
+4194:        query.data.startsWith(
+4195:          "create_basic_"
+4196:        )
+4197:      ) {
+4198:
+4199:        const parentNodeId =
+4200:          query.data.replace(
+4201:            "create_basic_",
+4202:            ""
+4203:          );
+4204:
+4205:        adminState[
+4206:          query.message.chat.id
+4207:        ] = {
+4208:          action: "create_node",
+4209:          parentNodeId,
+4210:          createdAt: Date.now()
+4211:        };
+4212:
+4213:        await axios.post(
+4214:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+4215:          {
+4216:            chat_id:
+4217:              query.message.chat.id,
+4218:            message_id:
+4219:              query.message.message_id,
+4220:            text:
+4221:`Enter Node Name :ㅤㅤㅤㅤㅤㅤㅤㅤ
+4222:
+4223:Example :
+4224:
+4225:Episode
+4226:Series
+4227:Get All
+4228:⛩️  ANIME`,
+4229:            reply_markup: {
+4230:              inline_keyboard: [
+4231:                [
+4232:                  {
+4233:                    text:
+4234:                      "🔙  BACK",
+4235:                    callback_data:
+4236:                      `basic_back_${parentNodeId}`
+4237:                  },
+4238:                  {
+4239:                    text:
+4240:                      "❎  CANCEL",
+4241:                    callback_data:
+4242:                      `basic_cancel_${parentNodeId}`
+4243:                  },
+4244:                  {
+4245:                    text:
+4246:                      "❌  CLOSE",
+4247:                    callback_data:
+4248:                      "close_search"
+4249:                  }
+4250:                ]
+4251:              ]
+4252:            }
+4253:          }
+4254:        );
+4255:
+4256:        return res.sendStatus(200);
+4257:      }
+4258:
+4259:
+4260:
+4261:if (
+4262:        query.data.startsWith(
+4263:          "create_powerful_"
+4264:        )
+4265:      ) {
+4266:
+4267:        const parentNodeId =
+4268:          query.data.replace(
+4269:            "create_powerful_",
+4270:            ""
+4271:          );
+4272:
+4273:        adminState[
+4274:          query.message.chat.id
+4275:        ] = {
+4276:          action:
+4277:            "auto_node_prefix",
+4278:          parentNodeId,
+4279:          createdAt: Date.now()
+4280:        };
+4281:
+4282:        await axios.post(
+4283:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+4284:          {
+4285:            chat_id:
+4286:              query.message.chat.id,
+4287:            message_id:
+4288:              query.message.message_id,
+4289:            text:
+4290:`Node Prefix ?
+4291:
+4292:Examples :
+4293:
+4294:Episode
+4295:OVA
+4296:Movie
+4297:Season
+4298:Part`,
+4299:            reply_markup: {
+4300:              inline_keyboard: [
+4301:                [
+4302:                  {
+4303:                    text:
+4304:                      "🔙  BACK",
+4305:                    callback_data:
+4306:                      `basic_back_${parentNodeId}`
+4307:                  },
+4308:                  {
+4309:                    text:
+4310:                      "❎  CANCEL",
+4311:                    callback_data:
+4312:                      `basic_cancel_${parentNodeId}`
+4313:                  },
+4314:                  {
+4315:                    text:
+4316:                      "❌  CLOSE",
+4317:                    callback_data:
+4318:                      "close_search"
+4319:                  }
+4320:                ]
+4321:              ]
+4322:            }
+4323:          }
+4324:        );
+4325:
+4326:        return res.sendStatus(200);
+4327:      }
+4328:
+4329:
+4330:if (
+4331:        query.data.startsWith(
+4332:          "basic_back_"
+4333:        )
+4334:      ) {
+4335:
+4336:        const parentNodeId =
+4337:          query.data.replace(
+4338:            "basic_back_",
+4339:            ""
+4340:          );
+4341:
+4342:        delete adminState[
+4343:          query.message.chat.id
+4344:        ];
+4345:
+4346:        await axios.post(
+4347:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+4348:          {
+4349:            chat_id:
+4350:              query.message.chat.id,
+4351:            message_id:
+4352:              query.message.message_id,
+4353:            text:
+4354:`Choose Mode`,
+4355:            reply_markup: {
+4356:              inline_keyboard: [
+4357:                [
+4358:                  {
+4359:                    text:
+4360:                      "ㅤBASICㅤ",
+4361:                    callback_data:
+4362:                      `create_basic_${parentNodeId}`
+4363:                  }
+4364:                ],
+4365:                [
+4366:                  {
+4367:                    text:
+4368:                      "ㅤPOWERFULㅤ❖ㅤAUTOMATEDㅤ",
+4369:                    callback_data:
+4370:                      `create_powerful_${parentNodeId}`
+4371:                  }
+4372:                ],
+4373:                [
+4374:                  {
+4375:                    text:
+4376:                      "🔙  BACK",
+4377:                    callback_data:
+4378:                      `lib_open_${parentNodeId}`
+4379:                  },
+4380:                  {
+4381:                    text:
+4382:                      "✖️  CLOSE",
+4383:                    callback_data:
+4384:                      "close_search"
+4385:                  }
+4386:                ]
+4387:              ]
+4388:            }
+4389:          }
+4390:        );
+4391:
+4392:        return res.sendStatus(200);
+4393:      }
+4394:
+4395:
+4396:
+4397:if (
+4398:        query.data.startsWith(
+4399:          "basic_cancel_"
+4400:        )
+4401:      ) {
+4402:
+4403:        delete adminState[
+4404:          query.message.chat.id
+4405:        ];
+4406:
+4407:        await renderLibraryRoot(
+4408:          db,
+4409:          query.message.chat.id,
+4410:          query.message.message_id
+4411:        );
+4412:
+4413:        return res.sendStatus(200);
+4414:      }
+4415:
+4416:
+4417:
+4418:if (
+4419:        query.data.startsWith(
+4420:          "auto_create_cancel_"
+4421:        )
+4422:      ) {
+4423:
+4424:        const state =
+4425:          adminState[
+4426:            query.message.chat.id
+4427:          ];
+4428:
+4429:        const parentNodeId =
+4430:          state?.parentNodeId ||
+4431:          "ROOT";
+4432:
+4433:        delete adminState[
+4434:          query.message.chat.id
+4435:        ];
+4436:
+4437:        await axios.post(
+4438:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+4439:          {
+4440:            chat_id:
+4441:              query.message.chat.id,
+4442:            message_id:
+4443:              query.message.message_id,
+4444:            text:
+4445:`Choose Mode`,
+4446:            reply_markup: {
+4447:              inline_keyboard: [
+4448:                [
+4449:                  {
+4450:                    text:
+4451:                      "ㅤBASICㅤ",
+4452:                    callback_data:
+4453:                      `create_basic_${parentNodeId}`
+4454:                  }
+4455:                ],
+4456:                [
+4457:                  {
+4458:                    text:
+4459:                      "ㅤPOWERFULㅤ❖ㅤAUTOMATEDㅤ",
+4460:                    callback_data:
+4461:                      `create_powerful_${parentNodeId}`
+4462:                  }
+4463:                ],
+4464:                [
+4465:                  {
+4466:                    text:
+4467:                      "🔙  BACK",
+4468:                    callback_data:
+4469:                      `lib_open_${parentNodeId}`
+4470:                  },
+4471:                  {
+4472:                    text:
+4473:                      "✖️  CLOSE",
+4474:                    callback_data:
+4475:                      "close_search"
+4476:                  }
+4477:                ]
+4478:              ]
+4479:            }
+4480:          }
+4481:        );
+4482:
+4483:        return res.sendStatus(200);
+4484:      }
+4485:
+4486:
+4487:
+4488:if (
+4489:        query.data.startsWith(
+4490:          "auto_create_back_"
+4491:        )
+4492:      ) {
+4493:
+4494:        const parentNodeId =
+4495:          query.data.replace(
+4496:            "auto_create_back_",
+4497:            ""
+4498:          );
+4499:
+4500:        const oldState =
+4501:          adminState[
+4502:            query.message.chat.id
+4503:          ];
+4504:
+4505:        delete adminState[
+4506:          query.message.chat.id
+4507:        ];
+4508:
+4509:        adminState[
+4510:          query.message.chat.id
+4511:        ] = {
+4512:          action:
+4513:            "auto_node_padding",
+4514:
+4515:          parentNodeId:
+4516:            oldState.parentNodeId,
+4517:
+4518:          prefix:
+4519:            oldState.backPrefix,
+4520:
+4521:          endNumber:
+4522:            oldState.backEndNumber,
+4523:
+4524:          createdAt:
+4525:            Date.now()
+4526:        };
+4527:
+4528:        await axios.post(
+4529:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+4530:          {
+4531:            chat_id:
+4532:              query.message.chat.id,
+4533:            message_id:
+4534:              query.message.message_id,
+4535:            text:
+4536:`Padding ?
+4537:
+4538:YES = DYNAMIC : 001, 002, 003
+4539:
+4540:NO = 1, 2, 3`,
+4541:            reply_markup: {
+4542:              inline_keyboard: [
+4543:                [
+4544:                  {
+4545:                    text: "✅ YES",
+4546:                    callback_data:
+4547:                      `auto_padding_yes_${query.message.chat.id}`
+4548:                  }
+4549:                ],
+4550:                [
+4551:                  {
+4552:                    text: "❌ NO",
+4553:                    callback_data:
+4554:                      `auto_padding_no_${query.message.chat.id}`
+4555:                  }
+4556:                ],
+4557:                [
+4558:                  {
+4559:                    text: "❌ CLOSE",
+4560:                    callback_data:
+4561:                      "close_search"
+4562:                  }
+4563:                ]
+4564:              ]
+4565:            }
+4566:          }
+4567:        );
+4568:
+4569:        return res.sendStatus(200);
+4570:      }
+4571:
+4572:
+4573:
+4574:
+4575:
+4576:if (
+4577:        query.data.startsWith(
+4578:          "auto_padding_yes_"
+4579:        )
+4580:      ) {
+4581:
+4582:        const state =
+4583:          adminState[
+4584:            query.message.chat.id
+4585:          ];
+4586:
+4587:        if (
+4588:          !state ||
+4589:          state.action !==
+4590:            "auto_node_padding"
+4591:        ) {
+4592:
+4593:          return res.sendStatus(200);
+4594:        }
+4595:
+4596:        const paddingLength =
+4597:          String(
+4598:            state.endNumber
+4599:          ).length;
+4600:
+4601:        const preview =
+4602:          buildAutoNodePreview(
+4603:            state.prefix,
+4604:            state.endNumber,
+4605:            paddingLength
+4606:          );
+4607:
+4608:        adminState[
+4609:          query.message.chat.id
+4610:        ] = {
+4611:          action:
+4612:            "auto_node_confirm",
+4613:          parentNodeId:
+4614:            state.parentNodeId,
+4615:          prefix:
+4616:            state.prefix,
+4617:          endNumber:
+4618:            state.endNumber,
+4619:          paddingLength,
+4620:          backPrefix:
+4621:            state.prefix,
+4622:          backEndNumber:
+4623:            state.endNumber,
+4624:          createdAt:
+4625:            Date.now()
+4626:        };
+4627:
+4628:        await axios.post(
+4629:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+4630:          {
+4631:            chat_id:
+4632:              query.message.chat.id,
+4633:            message_id:
+4634:              query.message.message_id,
+4635:            text:
+4636:`Preview
+4637:
+4638:${preview}
+4639:
+4640:Total Nodes : ${state.endNumber}`,
+4641:            reply_markup: {
+4642:              inline_keyboard: [
+4643:                [
+4644:                  {
+4645:                    text:
+4646:                      "✅ CREATE",
+4647:                    callback_data:
+4648:                      `auto_create_confirm_${query.message.chat.id}`
+4649:                  },
+4650:                  {
+4651:                    text:
+4652:                      "🔙 BACK",
+4653:                    callback_data:
+4654:                      `auto_create_back_${query.message.chat.id}`
+4655:                  }
+4656:                ],
+4657:                [
+4658:                  {
+4659:                    text:
+4660:                      "❎ CANCEL",
+4661:                    callback_data:
+4662:                      `auto_create_cancel_${query.message.chat.id}`
+4663:                  }
+4664:                ],
+4665:                [
+4666:                  {
+4667:                    text:
+4668:                      "❌ CLOSE",
+4669:                    callback_data:
+4670:                      "close_search"
+4671:                  }
+4672:                ]
+4673:              ]
+4674:            }
+4675:          }
+4676:        );
+4677:
+4678:        return res.sendStatus(200);
+4679:      }
+4680:
+4681:
+4682:
+4683:if (
+4684:        query.data.startsWith(
+4685:          "auto_padding_no_"
+4686:        )
+4687:      ) {
+4688:
+4689:        const state =
+4690:          adminState[
+4691:            query.message.chat.id
+4692:          ];
+4693:
+4694:        if (
+4695:          !state ||
+4696:          state.action !==
+4697:            "auto_node_padding"
+4698:        ) {
+4699:
+4700:          return res.sendStatus(200);
+4701:        }
+4702:
+4703:        const paddingLength = 0;
+4704:
+4705:        const preview =
+4706:          buildAutoNodePreview(
+4707:            state.prefix,
+4708:            state.endNumber,
+4709:            paddingLength
+4710:          );
+4711:
+4712:        adminState[
+4713:          query.message.chat.id
+4714:        ] = {
+4715:          action:
+4716:            "auto_node_confirm",
+4717:          parentNodeId:
+4718:            state.parentNodeId,
+4719:          prefix:
+4720:            state.prefix,
+4721:          endNumber:
+4722:            state.endNumber,
+4723:          paddingLength,
+4724:          backPrefix:
+4725:            state.prefix,
+4726:          backEndNumber:
+4727:            state.endNumber,
+4728:          createdAt:
+4729:            Date.now()
+4730:        };
+4731:
+4732:        await axios.post(
+4733:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+4734:          {
+4735:            chat_id:
+4736:              query.message.chat.id,
+4737:            message_id:
+4738:              query.message.message_id,
+4739:            text:
+4740:`Preview
+4741:
+4742:${preview}
+4743:
+4744:Total Nodes : ${state.endNumber}`,
+4745:            reply_markup: {
+4746:              inline_keyboard: [
+4747:                [
+4748:                  {
+4749:                    text:
+4750:                      "✅ CREATE",
+4751:                    callback_data:
+4752:                      `auto_create_confirm_${query.message.chat.id}`
+4753:                  },
+4754:                  {
+4755:                    text:
+4756:                      "🔙 BACK",
+4757:                    callback_data:
+4758:                      `auto_create_back_${query.message.chat.id}`
+4759:                  }
+4760:                ],
+4761:                [
+4762:                  {
+4763:                    text:
+4764:                      "❎ CANCEL",
+4765:                    callback_data:
+4766:                      `auto_create_cancel_${query.message.chat.id}`
+4767:                  }
+4768:                ],
+4769:                [
+4770:                  {
+4771:                    text:
+4772:                      "❌ CLOSE",
+4773:                    callback_data:
+4774:                      "close_search"
+4775:                  }
+4776:                ]
+4777:              ]
+4778:            }
+4779:          }
+4780:        );
+4781:
+4782:        return res.sendStatus(200);
+4783:      }
+4784:
+4785:
+4786:
+4787:if (
+4788:        query.data.startsWith(
+4789:          "auto_create_confirm_"
+4790:        )
+4791:      ) {
+4792:
+4793:        const state =
+4794:          adminState[
+4795:            query.message.chat.id
+4796:          ];
+4797:
+4798:        if (
+4799:          !state ||
+4800:          state.action !==
+4801:            "auto_node_confirm"
+4802:        ) {
+4803:
+4804:          return res.sendStatus(200);
+4805:        }
+4806:
+4807:        delete adminState[
+4808:          query.message.chat.id
+4809:        ];
+4810:
+4811:        const lastNode =
+4812:          await db.nodes.find({
+4813:            parent_id:
+4814:              state.parentNodeId
+4815:          })
+4816:          .sort({
+4817:            position: -1
+4818:          })
+4819:          .limit(1)
+4820:          .toArray();
+4821:
+4822:        let position =
+4823:          lastNode.length
+4824:            ? lastNode[0].position + 1
+4825:            : 1;
+4826:
+4827:        for (
+4828:          let i = 1;
+4829:          i <= state.endNumber;
+4830:          i++
+4831:        ) {
+4832:
+4833:          const publicId =
+4834:            await getNextNodeId(db);
+4835:
+4836:          const nodeName =
+4837:            formatAutoNodeName(
+4838:              state.prefix,
+4839:              i,
+4840:              state.paddingLength
+4841:            );
+4842:
+4843:          await db.nodes.insertOne({
+4844:            public_id: publicId,
+4845:            name: nodeName,
+4846:            parent_id:
+4847:              state.parentNodeId,
+4848:            position,
+4849:            description: "",
+4850:            poster_file_id: null,
+4851:            custom_sort_character: null,
+4852:            is_trashed: false,
+4853:            created_at:
+4854:              new Date(),
+4855:            updated_at:
+4856:              new Date()
+4857:          });
+4858:
+4859:          position++;
+4860:        }
+4861:
+4862:        delete adminState[
+4863:          query.message.chat.id
+4864:        ];
+4865:
+4866:        await axios.post(
+4867:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+4868:          {
+4869:            chat_id:
+4870:              query.message.chat.id,
+4871:            message_id:
+4872:              query.message.message_id,
+4873:            text:
+4874:`✅ Auto Nodes Created
+4875:
+4876:Prefix :
+4877:${state.prefix}
+4878:
+4879:Created :
+4880:${state.endNumber}`,
+4881:            reply_markup: {
+4882:              inline_keyboard: [
+4883:                [
+4884:                  {
+4885:                    text:
+4886:                      "🏡 HOME",
+4887:                    callback_data:
+4888:                      "bankai_library"
+4889:                  }
+4890:                ]
+4891:              ]
+4892:            }
+4893:          }
+4894:        );
+4895:
+4896:        return res.sendStatus(200);
+4897:      }
+4898:
+4899:
+4900:
+4901:
+4902:if (
+4903:        query.data.startsWith(
+4904:          "bankai_library_page_"
+4905:        )
+4906:      ) {
+4907:
+4908:        const parts =
+4909:          query.data.split("_");
+4910:
+4911:        const page =
+4912:          Number(
+4913:            parts.pop()
+4914:          );
+4915:
+4916:        const nodeId =
+4917:          parts.pop();
+4918:
+4919:        await akashiNodeRenderer(
+4920:          db,
+4921:          query.message.chat.id,
+4922:          query.message.message_id,
+4923:          nodeId,
+4924:          page
+4925:        );
+4926:
+4927:        return res.sendStatus(200);
+4928:      }
+4929:
+4930:
+4931:
+4932:if (query.data.startsWith("lib_open_")) {
+4933:
+4934:        const parts =
+4935:          query.data.replace(
+4936:            "lib_open_",
+4937:            ""
+4938:          ).split("_");
+4939:
+4940:        const publicId =
+4941:          parts[0];
+4942:
+4943:        if (publicId === "ROOT") {
+4944:
+4945:          await renderLibraryRoot(
+4946:            db,
+4947:            query.message.chat.id,
+4948:            query.message.message_id
+4949:          );
+4950:
+4951:        } else {
+4952:
+4953:          const view =
+4954:            await buildLibraryNodeView(
+4955:              db,
+4956:              publicId
+4957:            );
+4958:
+4959:          await akashiNodeRenderer(
+4960:            db,
+4961:            query.message.chat.id,
+4962:            query.message.message_id,
+4963:            publicId
+4964:          );
+4965:        }
+4966:
+4967:        return res.sendStatus(200);
+4968:      }
+4969:
+4970:
+4971:
+4972:if (
+4973:        query.data.startsWith(
+4974:          "bankai_library_prev_"
+4975:        )
+4976:      ) {
+4977:
+4978:        const parts =
+4979:          query.data.split("_");
+4980:
+4981:        const page =
+4982:          Number(
+4983:            parts.pop()
+4984:          );
+4985:
+4986:        const nodeId =
+4987:          parts.pop();
+4988:
+4989:        await akashiNodeRenderer(
+4990:          db,
+4991:          query.message.chat.id,
+4992:          query.message.message_id,
+4993:          nodeId,
+4994:          page - 1
+4995:        );
+4996:
+4997:        return res.sendStatus(200);
+4998:      }
+4999:
+5000:
+5001:
+5002:if (
+5003:        query.data.startsWith(
+5004:          "bankai_library_next_"
+5005:        )
+5006:      ) {
+5007:
+5008:        const parts =
+5009:          query.data.split("_");
+5010:
+5011:        const page =
+5012:          Number(
+5013:            parts.pop()
+5014:          );
+5015:
+5016:        const nodeId =
+5017:          parts.pop();
+5018:
+5019:        await akashiNodeRenderer(
+5020:          db,
+5021:          query.message.chat.id,
+5022:          query.message.message_id,
+5023:          nodeId,
+5024:          page + 1
+5025:        );
+5026:
+5027:        return res.sendStatus(200);
+5028:      }
+5029:
+5030:
+5031:
+5032:if (query.data.startsWith("lib_back_")) {
+5033:
+5034:        const parts =
+5035:          query.data.replace(
+5036:            "lib_back_",
+5037:            ""
+5038:          ).split("_");
+5039:
+5040:        const page =
+5041:          Number(
+5042:            parts.pop()
+5043:          );
+5044:
+5045:        const parentId =
+5046:          parts.join("_");
+5047:
+5048:        if (parentId === "ROOT") {
+5049:
+5050:          try {
+5051:
+5052:            await axios.post(
+5053:              `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
+5054:              {
+5055:                chat_id:
+5056:                  query.message.chat.id,
+5057:                message_id:
+5058:                  query.message.message_id
+5059:              }
+5060:            );
+5061:
+5062:          } catch (err) {}
+5063:
+5064:          await removeNodePoster(
+5065:            query.message.chat.id
+5066:          );
+5067:
+5068:          const rootChildren =
+5069:            await db.nodes.find({
+5070:              parent_id: "ROOT",
+5071:              is_trashed: false
+5072:            }).sort({
+5073:              position: 1,
+5074:              name: 1
+5075:            }).toArray();
+5076:
+5077:          const buttons =
+5078:            rootChildren.map(
+5079:              node => [{
+5080:                text: node.name,
+5081:                callback_data:
+5082:                  `lib_open_${node.public_id}`
+5083:              }]
+5084:            );
+5085:
+5086:          buttons.push([
+5087:            {
+5088:              text: "➕ Create Child Node",
+5089:              callback_data:
+5090:                "admin_create_ROOT"
+5091:            }
+5092:          ]);
+5093:
+5094:          buttons.push([
+5095:            {
+5096:              text: "⬅ BACK",
+5097:              callback_data:
+5098:                "back_admin_panel"
+5099:            },
+5100:            {
+5101:              text: "❌ CLOSE",
+5102:              callback_data:
+5103:                "close_search"
+5104:            }
+5105:          ]);
+5106:
+5107:          await sendMessage(
+5108:            query.message.chat.id,
+5109:            "ㅤ⛩️  BANKAIㅤ❖ㅤLIBRARYㅤ\n\nROOTㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ",
+5110:            {
+5111:              inline_keyboard:
+5112:                buttons
+5113:            }
+5114:          );
+5115:
+5116:        } else {
+5117:
+5118:          await akashiNodeRenderer(
+5119:            db,
+5120:            query.message.chat.id,
+5121:            query.message.message_id,
+5122:            parentId,
+5123:            page
+5124:          );
+5125:        }
+5126:
+5127:        return res.sendStatus(200);
+5128:      }
+5129:
+5130:
+5131:
+5132:if (
+5133:        query.data.startsWith(
+5134:          "node_actions_"
+5135:        )
+5136:      ) {
+5137:
+5138:        const publicId =
+5139:          query.data.replace(
+5140:            "node_actions_",
+5141:            ""
+5142:          );
+5143:
+5144:        nodeActionState[
+5145:          query.message.chat.id
+5146:        ] = null;
+5147:
+5148:        nodeFilesState[
+5149:          query.message.chat.id
+5150:        ] = null;
+5151:
+5152:        nodePosterState[
+5153:          query.message.chat.id
+5154:        ] = null;
+5155:
+5156:        await axios.post(
+5157:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+5158:          {
+5159:            chat_id:
+5160:              query.message.chat.id,
+5161:            message_id:
+5162:              query.message.message_id,
+5163:            text:
+5164:              "⚙ Node Actions",
+5165:            reply_markup: {
+5166:              inline_keyboard: [
+5167:                [
+5168:                  {
+5169:                    text:
+5170:                      "📎 Attach Files",
+5171:                    callback_data:
+5172:                      `attach_files_${publicId}`
+5173:                  }
+5174:                ],
+5175:                [
+5176:                  {
+5177:                    text:
+5178:                      "❌ Detach Files",
+5179:                    callback_data:
+5180:                      `detach_files_${publicId}`
+5181:                  }
+5182:                ],
+5183:                [
+5184:                  {
+5185:                    text:
+5186:                      "⬆⬇ Reorder Files",
+5187:                    callback_data:
+5188:                      `reorder_files_${publicId}`
+5189:                  }
+5190:                ],
+5191:                [
+5192:                  {
+5193:                    text:
+5194:                      "✏ Rename Node",
+5195:                    callback_data:
+5196:                      `rename_node_${publicId}`
+5197:                  }
+5198:                ],
+5199:                [
+5200:                  {
+5201:                    text:
+5202:                      "📝 Set Description",
+5203:                    callback_data:
+5204:                      `description_node_${publicId}`
+5205:                  }
+5206:                ],
+5207:                [
+5208:                  {
+5209:                    text:
+5210:                      "📝 Edit Current Description",
+5211:                    callback_data:
+5212:                      `edit_current_description_${publicId}`
+5213:                  }
+5214:                ],
+5215:                [
+5216:                  {
+5217:                    text:
+5218:                      "🗑 Clear Description",
+5219:                    callback_data:
+5220:                      `clear_description_${publicId}`
+5221:                  }
+5222:                ],
+5223:                [
+5224:                  {
+5225:                    text:
+5226:                      "🎴 Set Poster",
+5227:                    callback_data:
+5228:                      `set_poster_${publicId}`
+5229:                  }
+5230:                ],
+5231:                [
+5232:                  {
+5233:                    text:
+5234:                      "👁 View Poster",
+5235:                    callback_data:
+5236:                      `view_poster_${publicId}`
+5237:                  }
+5238:                ],
+5239:                [
+5240:                  {
+5241:                    text:
+5242:                      "🗑 Remove Poster",
+5243:                    callback_data:
+5244:                      `remove_poster_${publicId}`
+5245:                  }
+5246:                ],
+5247:                [
+5248:                  {
+5249:                    text:
+5250:                      "⬆⬇ Reorder Node",
+5251:                    callback_data:
+5252:                      `reorder_node_${publicId}`
+5253:                  }
+5254:                ],
+5255:                [
+5256:                  {
+5257:                    text:
+5258:                      "♻ Move To Trash",
+5259:                    callback_data:
+5260:                      `trash_node_${publicId}`
+5261:                  }
+5262:                ],
+5263:                [
+5264:                  {
+5265:                    text:
+5266:                      "⬅ Back",
+5267:                    callback_data:
+5268:                      `lib_open_${publicId}`
+5269:                  },
+5270:                  {
+5271:                    text:
+5272:                      "❌ CLOSE",
+5273:                    callback_data:
+5274:                      "close_search"
+5275:                  }
+5276:                ]
+5277:              ]
+5278:            }
+5279:          }
+5280:        );
+5281:
+5282:        return res.sendStatus(200);
+5283:      }
+5284:
+5285:
+5286:
+5287:if (
+5288:        query.data.startsWith(
+5289:          "reorder_node_"
+5290:        )
+5291:      ) {
+5292:
+5293:        const publicId =
+5294:          query.data.replace(
+5295:            "reorder_node_",
+5296:            ""
+5297:          );
+5298:
+5299:        const node =
+5300:          await db.nodes.findOne({
+5301:            public_id: publicId
+5302:          });
+5303:
+5304:        if (!node) {
+5305:
+5306:          await sendMessage(
+5307:            query.message.chat.id,
+5308:            "❌ Node not found."
+5309:          );
+5310:
+5311:          return res.sendStatus(200);
+5312:        }
+5313:
+5314:        const totalSiblings =
+5315:          await db.nodes.countDocuments({
+5316:            parent_id:
+5317:              node.parent_id,
+5318:            is_trashed: false
+5319:          });
+5320:
+5321:        const buttons = [];
+5322:
+5323:        if (
+5324:          node.position > 1
+5325:        ) {
+5326:
+5327:          buttons.push([
+5328:            {
+5329:              text:
+5330:                "⬆ Move Up",
+5331:              callback_data:
+5332:                `moveup_node_${publicId}`
+5333:            }
+5334:          ]);
+5335:        }
+5336:
+5337:        if (
+5338:          node.position <
+5339:          totalSiblings
+5340:        ) {
+5341:
+5342:          buttons.push([
+5343:            {
+5344:              text:
+5345:                "⬇ Move Down",
+5346:              callback_data:
+5347:                `movedown_node_${publicId}`
+5348:            }
+5349:          ]);
+5350:        }
+5351:
+5352:        buttons.push([
+5353:          {
+5354:            text:
+5355:              "⬅ Back",
+5356:            callback_data:
+5357:              `node_actions_${publicId}`
+5358:          }
+5359:        ]);
+5360:
+5361:        await axios.post(
+5362:          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
+5363:          {
+5364:            chat_id:
+5365:              query.message.chat.id,
+5366:            message_id:
+5367:              query.message.message_id,
+5368:            text:
+5369:`⬆⬇ Reorder Node
+5370:
+5371:Node :
+5372:
+5373:${node.name}
+5374:
+5375:Position : ${node.position} / ${totalSiblings}`,
+5376:            reply_markup: {
+5377:              inline_keyboard:
+5378:                buttons
+5379:            }
+5380:          }
+5381:        );
+5382:
+5383:        return res.sendStatus(200);
+5384:      }
+5385:
+5386:
+5387:
+5388:if (
+5389:        query.data.startsWith(
+5390:          "moveup_node_"
+5391:        )
+5392:      ) {
+5393:
+5394:        const publicId =
+5395:          query.data.replace(
+5396:            "moveup_node_",
+5397:            ""
+5398:          );
+5399:
