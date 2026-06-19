@@ -5147,130 +5147,124 @@ if (
           query.message.chat.id
         ] = null;
 
-        await axios.post(
-          `https://api.telegram.org/bot${TOKEN}/editMessageText`,
-          {
-            chat_id:
-              query.message.chat.id,
-            message_id:
-              query.message.message_id,
-            text:
-              "⚙ Node Actions",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text:
-                      "📎 Attach Files",
-                    callback_data:
-                      `attach_files_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "❌ Detach Files",
-                    callback_data:
-                      `detach_files_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "⬆⬇ Reorder Files",
-                    callback_data:
-                      `reorder_files_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "✏ Rename Node",
-                    callback_data:
-                      `rename_node_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "📝 Set Description",
-                    callback_data:
-                      `description_node_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "📝 Edit Current Description",
-                    callback_data:
-                      `edit_current_description_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "🗑 Clear Description",
-                    callback_data:
-                      `clear_description_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "🎴 Set Poster",
-                    callback_data:
-                      `set_poster_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "👁 View Poster",
-                    callback_data:
-                      `view_poster_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "🗑 Remove Poster",
-                    callback_data:
-                      `remove_poster_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "⬆⬇ Reorder Node",
-                    callback_data:
-                      `reorder_node_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "♻ Move To Trash",
-                    callback_data:
-                      `trash_node_${publicId}`
-                  }
-                ],
-                [
-                  {
-                    text:
-                      "⬅ Back",
-                    callback_data:
-                      `lib_open_${publicId}`
-                  },
-                  {
-                    text:
-                      "❌ CLOSE",
-                    callback_data:
-                      "close_search"
-                  }
-                ]
-              ]
+        const buttons = [
+          [
+            {
+              text:
+                "📎 Attach Files",
+              callback_data:
+                `attach_files_${publicId}`
             }
-          }
+          ],
+          [
+            {
+              text:
+                "❌ Detach Files",
+              callback_data:
+                `detach_files_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "⬆⬇ Reorder Files",
+              callback_data:
+                `reorder_files_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "✏ Rename Node",
+              callback_data:
+                `rename_node_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "📝 Set Description",
+              callback_data:
+                `description_node_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "📝 Edit Current Description",
+              callback_data:
+                `edit_current_description_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "🗑 Clear Description",
+              callback_data:
+                `clear_description_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "🎴 Set Poster",
+              callback_data:
+                `set_poster_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "👁 View Poster",
+              callback_data:
+                `view_poster_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "🗑 Remove Poster",
+              callback_data:
+                `remove_poster_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "⬆⬇ Reorder Node",
+              callback_data:
+                `reorder_node_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "♻ Move To Trash",
+              callback_data:
+                `trash_node_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
+                "⬅ Back",
+              callback_data:
+                `lib_open_${publicId}`
+            },
+            {
+              text:
+                "❌ CLOSE",
+              callback_data:
+                "close_search"
+            }
+          ]
+        ];
+
+        await akashiOpenMenu(
+          query.message.chat.id,
+          query.message.message_id,
+          "⚙ Node Actions",
+          buttons
         );
 
         return res.sendStatus(200);
