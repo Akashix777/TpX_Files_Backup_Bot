@@ -1341,15 +1341,6 @@ async function renderMoveNodeBrowser(
 
   const buttons = [];
 
-  buttons.push([
-    {
-      text:
-        "✔ Move Here",
-      callback_data:
-        `move_here_${sourceNodeId}_${browseNodeId}`
-    }
-  ]);
-
   for (
     const child of view.pageChildren
   ) {
@@ -1357,9 +1348,23 @@ async function renderMoveNodeBrowser(
     buttons.push([
       {
         text:
-          `📂 ${child.name}`,
+          child.name,
         callback_data:
           `move_browse_${sourceNodeId}_${child.public_id}_1`
+      }
+    ]);
+  }
+
+  if (
+    browseNodeId !== "ROOT"
+  ) {
+
+    buttons.push([
+      {
+        text:
+          "⬅ Up One Level",
+        callback_data:
+          `move_up_${sourceNodeId}_${browseNodeId}`
       }
     ]);
   }
@@ -1370,6 +1375,12 @@ async function renderMoveNodeBrowser(
         "❌ Cancel",
       callback_data:
         `node_actions_${sourceNodeId}`
+    },
+    {
+      text:
+        "Move Here ✅",
+      callback_data:
+        `move_here_${sourceNodeId}_${browseNodeId}`
     }
   ]);
 
@@ -1378,11 +1389,15 @@ async function renderMoveNodeBrowser(
     messageId,
 `🔀 Move Node
 
-Source:
+𝐒𝐨𝐮𝐫𝐜𝐞 :
+
 ${view.currentPath}
 
-Destination:
+
+𝐃𝐞𝐬𝐭𝐢𝐧𝐚𝐭𝐢𝐨𝐧 :
+
 ${view.destinationPath}
+
 
 Select destination folder or move here.`,
     buttons
@@ -7565,6 +7580,156 @@ if (
           sourceNodeId,
           browseNodeId,
           page
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "move_up_"
+        )
+      ) {
+
+        const parts =
+          query.data.replace(
+            "move_up_",
+            ""
+          ).split("_");
+
+        const browseNodeId =
+          parts.pop();
+
+        const sourceNodeId =
+          parts.join("_");
+
+        const currentNode =
+          await db.nodes.findOne({
+            public_id: browseNodeId,
+            is_trashed: false
+          });
+
+        if (
+          !currentNode
+        ) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const parentNodeId =
+          currentNode.parent_id ||
+          "ROOT";
+
+        await renderMoveNodeBrowser(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          sourceNodeId,
+          parentNodeId,
+          1
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "move_here_"
+        )
+      ) {
+
+        const parts =
+          query.data.replace(
+            "move_here_",
+            ""
+          ).split("_");
+
+        const destinationNodeId =
+          parts.pop();
+
+        const sourceNodeId =
+          parts.join("_");
+
+        const sourceNode =
+          await db.nodes.findOne({
+            public_id: sourceNodeId,
+            is_trashed: false
+          });
+
+        if (!sourceNode) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Source node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        const oldParentId =
+          sourceNode.parent_id;
+
+        const lastNode =
+          await db.nodes.find({
+            parent_id:
+              destinationNodeId,
+            is_trashed: false
+          })
+          .sort({
+            position: -1
+          })
+          .limit(1)
+          .toArray();
+
+        const nextPosition =
+          lastNode.length
+            ? lastNode[0].position + 1
+            : 1;
+
+        await db.nodes.updateOne(
+          {
+            public_id: sourceNodeId
+          },
+          {
+            $set: {
+              parent_id:
+                destinationNodeId,
+              position:
+                nextPosition,
+              updated_at:
+                new Date()
+            }
+          }
+        );
+
+        await normalizeNodePositions(
+          db,
+          oldParentId
+        );
+
+        await normalizeNodePositions(
+          db,
+          destinationNodeId
+        );
+
+        nodeMoveState[
+          query.message.chat.id
+        ] = null;
+
+        await sendMessage(
+          query.message.chat.id,
+`✅ Node Moved
+
+${sourceNode.name}`
         );
 
         return res.sendStatus(200);
