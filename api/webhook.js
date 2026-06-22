@@ -39,7 +39,11 @@ const nodePosterRenderState = {};
 
 const libraryRenderState = {};
 
+const nodeMoveState = {};
+
 function clearAdminStates(chatId) {
+
+  nodeMoveState[chatId] = null;
 
   nodeActionState[chatId] = null;
   nodeFilesState[chatId] = null;
@@ -1162,6 +1166,229 @@ async function renderLibraryNode(
     view.nodeText
   );
 }
+
+
+async function normalizeNodePositions(
+  db,
+  parentId
+) {
+
+  const nodes =
+    await db.nodes.find({
+      parent_id: parentId,
+      is_trashed: false
+    })
+    .sort({
+      position: 1,
+      name: 1
+    })
+    .toArray();
+
+  let position = 1;
+
+  for (const node of nodes) {
+
+    await db.nodes.updateOne(
+      {
+        _id: node._id
+      },
+      {
+        $set: {
+          position
+        }
+      }
+    );
+
+    position++;
+  }
+}
+
+
+async function buildMoveNodeView(
+  db,
+  sourceNodeId,
+  browseNodeId = "ROOT",
+  page = 1
+) {
+
+  const sourceNode =
+    await db.nodes.findOne({
+      public_id: sourceNodeId,
+      is_trashed: false
+    });
+
+  if (!sourceNode) {
+    return null;
+  }
+
+  const descendants =
+    await getNodeDescendants(
+      db,
+      sourceNodeId
+    );
+
+  const blockedIds =
+    new Set([
+      sourceNodeId,
+      ...descendants.map(
+        x => x.public_id
+      )
+    ]);
+
+  let browseNode = null;
+
+  if (browseNodeId !== "ROOT") {
+
+    browseNode =
+      await db.nodes.findOne({
+        public_id: browseNodeId,
+        is_trashed: false
+      });
+
+    if (!browseNode) {
+      return null;
+    }
+  }
+
+  const children =
+    await db.nodes.find({
+      parent_id: browseNodeId,
+      is_trashed: false
+    })
+    .sort({
+      position: 1,
+      name: 1
+    })
+    .toArray();
+
+  const visibleChildren =
+    children.filter(
+      x =>
+        !blockedIds.has(
+          x.public_id
+        )
+    );
+
+  const totalPages =
+    getLibraryTotalPages(
+      visibleChildren.length
+    );
+
+  page = Math.max(
+    1,
+    Math.min(
+      page,
+      totalPages
+    )
+  );
+
+  const currentPath =
+    await buildNodePath(
+      db,
+      sourceNode
+    );
+
+  const destinationPath =
+    browseNodeId === "ROOT"
+      ? "ROOT"
+      : await buildNodePath(
+          db,
+          browseNode
+        );
+
+  const pageChildren =
+    getPageSlice(
+      visibleChildren,
+      page
+    );
+
+  return {
+    sourceNode,
+    browseNode,
+    browseNodeId,
+    blockedIds,
+    visibleChildren,
+    pageChildren,
+    currentPath,
+    destinationPath,
+    totalPages,
+    page
+  };
+}
+
+
+
+async function renderMoveNodeBrowser(
+  db,
+  chatId,
+  messageId,
+  sourceNodeId,
+  browseNodeId = "ROOT",
+  page = 1
+) {
+
+  const view =
+    await buildMoveNodeView(
+      db,
+      sourceNodeId,
+      browseNodeId,
+      page
+    );
+
+  if (!view) {
+    return;
+  }
+
+  const buttons = [];
+
+  buttons.push([
+    {
+      text:
+        "✔ Move Here",
+      callback_data:
+        `move_here_${sourceNodeId}_${browseNodeId}`
+    }
+  ]);
+
+  for (
+    const child of view.pageChildren
+  ) {
+
+    buttons.push([
+      {
+        text:
+          `📂 ${child.name}`,
+        callback_data:
+          `move_browse_${sourceNodeId}_${child.public_id}_1`
+      }
+    ]);
+  }
+
+  buttons.push([
+    {
+      text:
+        "❌ Cancel",
+      callback_data:
+        `node_actions_${sourceNodeId}`
+    }
+  ]);
+
+  await akashiOpenMenu(
+    chatId,
+    messageId,
+`🔀 Move Node
+
+Source:
+${view.currentPath}
+
+Destination:
+${view.destinationPath}
+
+Select destination folder or move here.`,
+    buttons
+  );
+}
+
 
 
 app.get("/", (req, res) => {
@@ -5183,6 +5410,14 @@ if (
           [
             {
               text:
+                "🔀 Move Node",
+              callback_data:
+                `move_node_${publicId}`
+            }
+          ],
+          [
+            {
+              text:
                 "📝 Set Description",
               callback_data:
                 `description_node_${publicId}`
@@ -7246,6 +7481,90 @@ if (
 
 Node:
 ${node.name}`
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "move_node_"
+        )
+      ) {
+
+        const publicId =
+          query.data.replace(
+            "move_node_",
+            ""
+          );
+
+        const node =
+          await db.nodes.findOne({
+            public_id: publicId,
+            is_trashed: false
+          });
+
+        if (!node) {
+
+          await sendMessage(
+            query.message.chat.id,
+            "❌ Node not found."
+          );
+
+          return res.sendStatus(200);
+        }
+
+        nodeMoveState[
+          query.message.chat.id
+        ] = {
+          sourceNodeId: publicId,
+          createdAt: Date.now()
+        };
+
+        await renderMoveNodeBrowser(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          publicId,
+          "ROOT",
+          1
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "move_browse_"
+        )
+      ) {
+
+        const parts =
+          query.data.replace(
+            "move_browse_",
+            ""
+          ).split("_");
+
+        const page =
+          Number(parts.pop());
+
+        const browseNodeId =
+          parts.pop();
+
+        const sourceNodeId =
+          parts.join("_");
+
+        await renderMoveNodeBrowser(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          sourceNodeId,
+          browseNodeId,
+          page
         );
 
         return res.sendStatus(200);
