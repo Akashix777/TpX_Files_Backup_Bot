@@ -446,6 +446,84 @@ function buildLibraryJumpButtons(
 
 
 
+function buildMoveJumpButtons(
+  sourceNodeId,
+  browseNodeId,
+  page,
+  totalPages
+) {
+
+  const row = [
+    {
+      text:
+        "ᴶᵁᴹᴾ",
+      callback_data:
+        "move_jump_label"
+    }
+  ];
+
+  let startPage =
+    Math.max(
+      1,
+      page - 2
+    );
+
+  let endPage =
+    Math.min(
+      totalPages,
+      startPage + 4
+    );
+
+  if (
+    endPage - startPage < 4
+  ) {
+
+    startPage =
+      Math.max(
+        1,
+        endPage - 4
+      );
+  }
+
+  for (
+    let pnum = startPage;
+    pnum <= endPage;
+    pnum++
+  ) {
+
+    const display =
+      pnum === page
+        ? String(pnum)
+            .split("")
+            .map(
+              d => ({
+                "0":"⓿",
+                "1":"❶",
+                "2":"❷",
+                "3":"❸",
+                "4":"❹",
+                "5":"❺",
+                "6":"❻",
+                "7":"❼",
+                "8":"❽",
+                "9":"❾"
+              })[d]
+            )
+            .join("")
+        : `ㅤ${pnum}ㅤ`;
+
+    row.push({
+      text: display,
+      callback_data:
+`move_page_${sourceNodeId}_${browseNodeId}_${pnum}`
+    });
+  }
+
+  return row;
+}
+
+
+
 function buildAutoNodePreview(
   prefix,
   endNumber,
@@ -1353,6 +1431,20 @@ async function renderMoveNodeBrowser(
           `move_browse_${sourceNodeId}_${child.public_id}_1`
       }
     ]);
+  }
+
+  if (
+    view.totalPages > 1
+  ) {
+
+    buttons.push(
+      buildMoveJumpButtons(
+        sourceNodeId,
+        browseNodeId,
+        view.page,
+        view.totalPages
+      )
+    );
   }
 
   if (
@@ -7589,6 +7681,41 @@ if (
 
 if (
         query.data.startsWith(
+          "move_page_"
+        )
+      ) {
+
+        const parts =
+          query.data.replace(
+            "move_page_",
+            ""
+          ).split("_");
+
+        const page =
+          Number(parts.pop());
+
+        const browseNodeId =
+          parts.pop();
+
+        const sourceNodeId =
+          parts.join("_");
+
+        await renderMoveNodeBrowser(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          sourceNodeId,
+          browseNodeId,
+          page
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
           "move_up_"
         )
       ) {
@@ -7725,11 +7852,47 @@ if (
           query.message.chat.id
         ] = null;
 
+        const fromPath =
+          oldParentId === "ROOT"
+            ? "ROOT"
+            : await buildNodePath(
+                db,
+                await db.nodes.findOne({
+                  public_id:
+                    oldParentId
+                })
+              );
+
+        const toPath =
+          destinationNodeId ===
+          "ROOT"
+            ? "ROOT"
+            : await buildNodePath(
+                db,
+                await db.nodes.findOne({
+                  public_id:
+                    destinationNodeId
+                })
+              );
+
         await sendMessage(
           query.message.chat.id,
 `✅ Node Moved
 
-${sourceNode.name}`
+
+𝐍𝐨𝐝𝐞 :
+
+${sourceNode.name}
+
+
+𝐅𝐫𝐨𝐦 :
+
+${fromPath}
+
+
+𝐓𝐨 :
+
+${toPath}`
         );
 
         return res.sendStatus(200);
