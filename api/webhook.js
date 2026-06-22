@@ -1437,6 +1437,25 @@ async function renderMoveNodeBrowser(
     view.totalPages > 1
   ) {
 
+    buttons.push([
+      {
+        text: "❮",
+        callback_data:
+          `move_prev_${sourceNodeId}_${browseNodeId}_${view.page}`
+      },
+      {
+        text:
+          `${view.page}/${view.totalPages}`,
+        callback_data:
+          "move_page_label"
+      },
+      {
+        text: "❯",
+        callback_data:
+          `move_next_${sourceNodeId}_${browseNodeId}_${view.page}`
+      }
+    ]);
+
     buttons.push(
       buildMoveJumpButtons(
         sourceNodeId,
@@ -7672,6 +7691,76 @@ if (
           sourceNodeId,
           browseNodeId,
           page
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "move_prev_"
+        )
+      ) {
+
+        const parts =
+          query.data.replace(
+            "move_prev_",
+            ""
+          ).split("_");
+
+        const page =
+          Number(parts.pop());
+
+        const browseNodeId =
+          parts.pop();
+
+        const sourceNodeId =
+          parts.join("_");
+
+        await renderMoveNodeBrowser(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          sourceNodeId,
+          browseNodeId,
+          page - 1
+        );
+
+        return res.sendStatus(200);
+      }
+
+
+
+if (
+        query.data.startsWith(
+          "move_next_"
+        )
+      ) {
+
+        const parts =
+          query.data.replace(
+            "move_next_",
+            ""
+          ).split("_");
+
+        const page =
+          Number(parts.pop());
+
+        const browseNodeId =
+          parts.pop();
+
+        const sourceNodeId =
+          parts.join("_");
+
+        await renderMoveNodeBrowser(
+          db,
+          query.message.chat.id,
+          query.message.message_id,
+          sourceNodeId,
+          browseNodeId,
+          page + 1
         );
 
         return res.sendStatus(200);
