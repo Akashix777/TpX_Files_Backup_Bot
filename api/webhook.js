@@ -39,6 +39,8 @@ const nodePosterRenderState = {};
 
 const libraryRenderState = {};
 
+const navigationContextState = {};
+
 const nodeMoveState = {};
 
 function clearAdminStates(chatId) {
@@ -60,6 +62,96 @@ function clearAdminStates(chatId) {
   historySearchMode[chatId] = false;
 
   delete adminState[chatId];
+}
+
+
+
+function rememberPage(
+  chatId,
+  nodeId,
+  page
+) {
+
+  const now =
+    Date.now();
+
+  if (
+    !navigationContextState[
+      chatId
+    ]
+  ) {
+
+    navigationContextState[
+      chatId
+    ] = {
+      pages: {},
+      lastActivity:
+        now
+    };
+  }
+
+  navigationContextState[
+    chatId
+  ].pages[
+    nodeId
+  ] = page;
+
+  navigationContextState[
+    chatId
+  ].lastActivity =
+    now;
+}
+
+
+
+function getRememberedPage(
+  chatId,
+  nodeId
+) {
+
+  const state =
+    navigationContextState[
+      chatId
+    ];
+
+  if (!state) {
+    return null;
+  }
+
+  if (
+    Date.now() -
+    state.lastActivity >
+    3600000
+  ) {
+
+    delete
+      navigationContextState[
+        chatId
+      ];
+
+    return null;
+  }
+
+  state.lastActivity =
+    Date.now();
+
+  return (
+    state.pages[
+      nodeId
+    ] ?? null
+  );
+}
+
+
+
+function clearNavigationContext(
+  chatId
+) {
+
+  delete
+    navigationContextState[
+      chatId
+    ];
 }
 
 
@@ -3224,6 +3316,10 @@ if (command.startsWith("/list")) {
           query.message.chat.id
         );
 
+        clearNavigationContext(
+          query.message.chat.id
+        );
+
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
           {
@@ -4389,6 +4485,10 @@ if (query.data === "admin_broadcast") {
 
 if (query.data === "bankai_library") {
 
+        clearNavigationContext(
+          query.message.chat.id
+        );
+
         const posterState =
           nodePosterRenderState[
             query.message.chat.id
@@ -5263,6 +5363,12 @@ if (
         const nodeId =
           parts.pop();
 
+        rememberPage(
+          query.message.chat.id,
+          nodeId,
+          page
+        );
+
         await akashiNodeRenderer(
           db,
           query.message.chat.id,
@@ -5297,9 +5403,9 @@ if (query.data.startsWith("lib_open_")) {
 
         } else {
 
-          const view =
-            await buildLibraryNodeView(
-              db,
+          const rememberedPage =
+            getRememberedPage(
+              query.message.chat.id,
               publicId
             );
 
@@ -5307,7 +5413,8 @@ if (query.data.startsWith("lib_open_")) {
             db,
             query.message.chat.id,
             query.message.message_id,
-            publicId
+            publicId,
+            rememberedPage || 1
           );
         }
 
@@ -5332,6 +5439,12 @@ if (
 
         const nodeId =
           parts.pop();
+
+        rememberPage(
+          query.message.chat.id,
+          nodeId,
+          page - 1
+        );
 
         await akashiNodeRenderer(
           db,
@@ -5362,6 +5475,12 @@ if (
 
         const nodeId =
           parts.pop();
+
+        rememberPage(
+          query.message.chat.id,
+          nodeId,
+          page + 1
+        );
 
         await akashiNodeRenderer(
           db,
@@ -5462,12 +5581,18 @@ if (query.data.startsWith("lib_back_")) {
 
         } else {
 
+          const rememberedPage =
+            getRememberedPage(
+              query.message.chat.id,
+              parentId
+            );
+
           await akashiNodeRenderer(
             db,
             query.message.chat.id,
             query.message.message_id,
             parentId,
-            page
+            rememberedPage || page
           );
         }
 
