@@ -43,7 +43,7 @@ const libraryNavigationState = {};
 
 const moveNavigationState = {};
 
-const navigationContextState = {};
+
 
 const nodeMoveState = {};
 
@@ -70,93 +70,15 @@ function clearAdminStates(chatId) {
 
 
 
-function rememberPage(
-  chatId,
-  nodeId,
-  page
-) {
-
-  const now =
-    Date.now();
-
-  if (
-    !navigationContextState[
-      chatId
-    ]
-  ) {
-
-    navigationContextState[
-      chatId
-    ] = {
-      pages: {},
-      lastActivity:
-        now
-    };
-  }
-
-  navigationContextState[
-    chatId
-  ].pages[
-    nodeId
-  ] = page;
-
-  navigationContextState[
-    chatId
-  ].lastActivity =
-    now;
-}
 
 
 
-function getRememberedPage(
-  chatId,
-  nodeId
-) {
-
-  const state =
-    navigationContextState[
-      chatId
-    ];
-
-  if (!state) {
-    return null;
-  }
-
-  if (
-    Date.now() -
-    state.lastActivity >
-    3600000
-  ) {
-
-    delete
-      navigationContextState[
-        chatId
-      ];
-
-    return null;
-  }
-
-  state.lastActivity =
-    Date.now();
-
-  return (
-    state.pages[
-      nodeId
-    ] ?? null
-  );
-}
 
 
 
-function clearNavigationContext(
-  chatId
-) {
 
-  delete
-    navigationContextState[
-      chatId
-    ];
-}
+
+
 
 
 
