@@ -215,7 +215,7 @@ function getRememberedLibraryPage(
   if (
     Date.now() -
     state.lastActivity >
-    3600000
+    259200000
   ) {
 
     delete
@@ -3500,9 +3500,7 @@ if (command.startsWith("/list")) {
           query.message.chat.id
         );
 
-        clearLibraryNavigation(
-          query.message.chat.id
-        );
+
 
         await axios.post(
           `https://api.telegram.org/bot${TOKEN}/deleteMessage`,
@@ -4669,9 +4667,7 @@ if (query.data === "admin_broadcast") {
 
 if (query.data === "bankai_library") {
 
-        clearLibraryNavigation(
-          query.message.chat.id
-        );
+
 
         const posterState =
           nodePosterRenderState[
