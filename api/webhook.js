@@ -39,6 +39,10 @@ const nodePosterRenderState = {};
 
 const libraryRenderState = {};
 
+const libraryNavigationState = {};
+
+const moveNavigationState = {};
+
 const navigationContextState = {};
 
 const nodeMoveState = {};
@@ -150,6 +154,186 @@ function clearNavigationContext(
 
   delete
     navigationContextState[
+      chatId
+    ];
+}
+
+
+
+function rememberLibraryPage(
+  chatId,
+  nodeId,
+  page
+) {
+
+  const now =
+    Date.now();
+
+  if (
+    !libraryNavigationState[
+      chatId
+    ]
+  ) {
+
+    libraryNavigationState[
+      chatId
+    ] = {
+      pages: {},
+      lastActivity:
+        now
+    };
+  }
+
+  libraryNavigationState[
+    chatId
+  ].pages[
+    nodeId
+  ] = page;
+
+  libraryNavigationState[
+    chatId
+  ].lastActivity =
+    now;
+}
+
+
+
+function getRememberedLibraryPage(
+  chatId,
+  nodeId
+) {
+
+  const state =
+    libraryNavigationState[
+      chatId
+    ];
+
+  if (!state) {
+    return null;
+  }
+
+  if (
+    Date.now() -
+    state.lastActivity >
+    3600000
+  ) {
+
+    delete
+      libraryNavigationState[
+        chatId
+      ];
+
+    return null;
+  }
+
+  state.lastActivity =
+    Date.now();
+
+  return (
+    state.pages[
+      nodeId
+    ] ?? null
+  );
+}
+
+
+
+function clearLibraryNavigation(
+  chatId
+) {
+
+  delete
+    libraryNavigationState[
+      chatId
+    ];
+}
+
+
+
+function rememberMovePage(
+  chatId,
+  nodeId,
+  page
+) {
+
+  const now =
+    Date.now();
+
+  if (
+    !moveNavigationState[
+      chatId
+    ]
+  ) {
+
+    moveNavigationState[
+      chatId
+    ] = {
+      pages: {},
+      lastActivity:
+        now
+    };
+  }
+
+  moveNavigationState[
+    chatId
+  ].pages[
+    nodeId
+  ] = page;
+
+  moveNavigationState[
+    chatId
+  ].lastActivity =
+    now;
+}
+
+
+
+function getRememberedMovePage(
+  chatId,
+  nodeId
+) {
+
+  const state =
+    moveNavigationState[
+      chatId
+    ];
+
+  if (!state) {
+    return null;
+  }
+
+  if (
+    Date.now() -
+    state.lastActivity >
+    3600000
+  ) {
+
+    delete
+      moveNavigationState[
+        chatId
+      ];
+
+    return null;
+  }
+
+  state.lastActivity =
+    Date.now();
+
+  return (
+    state.pages[
+      nodeId
+    ] ?? null
+  );
+}
+
+
+
+function clearMoveNavigation(
+  chatId
+) {
+
+  delete
+    moveNavigationState[
       chatId
     ];
 }
@@ -3316,7 +3500,7 @@ if (command.startsWith("/list")) {
           query.message.chat.id
         );
 
-        clearNavigationContext(
+        clearLibraryNavigation(
           query.message.chat.id
         );
 
@@ -4485,7 +4669,7 @@ if (query.data === "admin_broadcast") {
 
 if (query.data === "bankai_library") {
 
-        clearNavigationContext(
+        clearLibraryNavigation(
           query.message.chat.id
         );
 
@@ -5363,7 +5547,7 @@ if (
         const nodeId =
           parts.pop();
 
-        rememberPage(
+        rememberLibraryPage(
           query.message.chat.id,
           nodeId,
           page
@@ -5404,7 +5588,7 @@ if (query.data.startsWith("lib_open_")) {
         } else {
 
           const rememberedPage =
-            getRememberedPage(
+            getRememberedLibraryPage(
               query.message.chat.id,
               publicId
             );
@@ -5440,7 +5624,7 @@ if (
         const nodeId =
           parts.pop();
 
-        rememberPage(
+        rememberLibraryPage(
           query.message.chat.id,
           nodeId,
           page - 1
@@ -5476,7 +5660,7 @@ if (
         const nodeId =
           parts.pop();
 
-        rememberPage(
+        rememberLibraryPage(
           query.message.chat.id,
           nodeId,
           page + 1
@@ -5582,7 +5766,7 @@ if (query.data.startsWith("lib_back_")) {
         } else {
 
           const rememberedPage =
-            getRememberedPage(
+            getRememberedLibraryPage(
               query.message.chat.id,
               parentId
             );
@@ -7809,13 +7993,19 @@ if (
         const sourceNodeId =
           parts.join("_");
 
+        const rememberedPage =
+          getRememberedMovePage(
+            query.message.chat.id,
+            browseNodeId
+          );
+
         await renderMoveNodeBrowser(
           db,
           query.message.chat.id,
           query.message.message_id,
           sourceNodeId,
           browseNodeId,
-          page
+          rememberedPage || page
         );
 
         return res.sendStatus(200);
@@ -7843,6 +8033,12 @@ if (
 
         const sourceNodeId =
           parts.join("_");
+
+        rememberMovePage(
+          query.message.chat.id,
+          browseNodeId,
+          page - 1
+        );
 
         await renderMoveNodeBrowser(
           db,
@@ -7879,6 +8075,12 @@ if (
         const sourceNodeId =
           parts.join("_");
 
+        rememberMovePage(
+          query.message.chat.id,
+          browseNodeId,
+          page + 1
+        );
+
         await renderMoveNodeBrowser(
           db,
           query.message.chat.id,
@@ -7913,6 +8115,12 @@ if (
 
         const sourceNodeId =
           parts.join("_");
+
+        rememberMovePage(
+          query.message.chat.id,
+          browseNodeId,
+          page
+        );
 
         await renderMoveNodeBrowser(
           db,
@@ -7968,13 +8176,19 @@ if (
           currentNode.parent_id ||
           "ROOT";
 
+        const rememberedPage =
+          getRememberedMovePage(
+            query.message.chat.id,
+            parentNodeId
+          );
+
         await renderMoveNodeBrowser(
           db,
           query.message.chat.id,
           query.message.message_id,
           sourceNodeId,
           parentNodeId,
-          1
+          rememberedPage || 1
         );
 
         return res.sendStatus(200);
@@ -8065,6 +8279,10 @@ if (
         nodeMoveState[
           query.message.chat.id
         ] = null;
+
+        clearMoveNavigation(
+          query.message.chat.id
+        );
 
         const fromPath =
           oldParentId === "ROOT"
