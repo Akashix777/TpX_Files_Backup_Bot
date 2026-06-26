@@ -531,7 +531,7 @@ function formatAutoNodeName(
 
 
 
-const LIBRARY_PAGE_SIZE = 50;
+const LIBRARY_PAGE_SIZE = 20;
 
 function getPageSlice(
   items,
@@ -923,32 +923,42 @@ async function buildLibraryNodeView(
       }]
     );
 
-  buttons.push([
-    {
-      text: "❮",
-      callback_data:
-        `bankai_library_prev_${node.public_id}_${page}`
-    },
-    {
-      text:
-        `${page}/${totalPages}`,
-      callback_data:
-        "bankai_library_page_label"
-    },
-    {
-      text: "❯",
-      callback_data:
-        `bankai_library_next_${node.public_id}_${page}`
-    }
-  ]);
+  if (
+    totalPages > 1
+  ) {
 
-  buttons.push(
-    buildLibraryJumpButtons(
-      node.public_id,
-      page,
-      totalPages
-    )
-  );
+    buttons.push([
+      {
+        text: "❮",
+        callback_data:
+          `bankai_library_prev_${node.public_id}_${page}`
+      },
+      {
+        text:
+          `${page}/${totalPages}`,
+        callback_data:
+          "bankai_library_page_label"
+      },
+      {
+        text: "❯",
+        callback_data:
+          `bankai_library_next_${node.public_id}_${page}`
+      }
+    ]);
+  }
+
+  if (
+    totalPages > 2
+  ) {
+
+    buttons.push(
+      buildLibraryJumpButtons(
+        node.public_id,
+        page,
+        totalPages
+      )
+    );
+  }
 
   buttons.push([
     {
@@ -1653,6 +1663,11 @@ async function renderMoveNodeBrowser(
           `move_next_${sourceNodeId}_${browseNodeId}_${view.page}`
       }
     ]);
+  }
+
+  if (
+    view.totalPages > 2
+  ) {
 
     buttons.push(
       buildMoveJumpButtons(
